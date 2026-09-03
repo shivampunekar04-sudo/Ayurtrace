@@ -1,0 +1,45 @@
+# AyurTrace Complete-B — Fabric channel policies & endorsement (component 4)
+#
+# HONESTY TAG: 🟢 BUILT config — illustrative but valid configtx-style policy definitions.
+# 🔵 DESIGNED for live enforcement: applied by a running Fabric network (configtxgen +
+# peers). These define WHO must endorse WHAT, complementing the chaincode attribute check
+# in fabric/chaincode/rbac-attribute-check.ts and the gateway middleware in src/rbac/.
+#
+# The eight orgs map 1:1 to the roles in src/rbac/roles.ts. NMPB/AYUSH = RegulatorOrg.
+# Consumer is read-only (no endorsement rights).
+
+Organizations:
+  - &CollectorOrg    { Name: CollectorOrg,    ID: CollectorMSP }
+  - &CfaOrg          { Name: CfaOrg,          ID: CfaMSP }
+  - &AggregatorOrg   { Name: AggregatorOrg,   ID: AggregatorMSP }
+  - &ProcessorOrg    { Name: ProcessorOrg,    ID: ProcessorMSP }
+  - &LabOrg          { Name: LabOrg,          ID: LabMSP }
+  - &ManufacturerOrg { Name: ManufacturerOrg, ID: ManufacturerMSP }
+  - &RegulatorOrg    { Name: RegulatorOrg,    ID: RegulatorMSP }   # NMPB / AYUSH
+  - &ConsumerOrg     { Name: ConsumerOrg,     ID: ConsumerMSP }    # read-only
+
+# Endorsement policies per write event type. These enforce the SAME role→action mapping the
+# middleware and chaincode use — as signature policies at the ordering/commit boundary.
+#
+# Key design point (spec §6): quality_test requires an INCENTIVE-INDEPENDENT second signer,
+# so its policy needs LabOrg AND (RegulatorOrg OR a second, distinct LabOrg) — never the
+# testing lab endorsing itself.
+EndorsementPolicies:
+  Collection:      "OR('CollectorMSP.member','CfaMSP.member')"
+  Aggregation:     "OR('AggregatorMSP.member')"
+  Processing:      "OR('ProcessorMSP.member')"
+  Merge:           "OR('AggregatorMSP.member')"
+  QualityTest:     "AND('LabMSP.member', OR('RegulatorMSP.member','LabMSP.member'))"
+  Formulation:     "OR('ManufacturerMSP.member')"
+  Recall:          "OR('RegulatorMSP.member')"
+
+# Attribute-based refinement: even within a permitted MSP, the enrolling cert must carry the
+# matching `role` attribute (checked in chaincode). MSP membership alone is not sufficient.
+AttributeRequirements:
+  role: "must equal the action's permitted role (see CHAINCODE_WRITE_MATRIX)"
+  # CFA certs additionally carry `cfa=true`; a revoked CFA cert is rejected by the CA CRL.
+
+# Read ACLs — public reads open to all members; precise audit is regulator-only.
+ACLs:
+  "ayurtrace/BatchRead":  "OR('CollectorMSP.member','CfaMSP.member','AggregatorMSP.member','ProcessorMSP.member','LabMSP.member','ManufacturerMSP.member','RegulatorMSP.member','ConsumerMSP.member')"
+  "ayurtrace/AuditRead":  "OR('RegulatorMSP.member')"

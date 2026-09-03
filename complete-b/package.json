@@ -1,0 +1,27 @@
+{
+  "name": "ayurtrace-complete-b",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AyurTrace Complete-B — the advanced layer (SMS, CFA/DPDP, RFC-3161, 7-role RBAC, analytics, CP-5/CP-6, IoT weighbridge, full PoLK). Independent of Complete-A; built only against the frozen @ayurtrace/contracts.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "mock": "node CompleteB/mock-gateway/mock-gateway.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "predemo": "tsc",
+    "demo": "node scripts/demo.mjs",
+    "pretsa:live": "tsc",
+    "tsa:live": "node scripts/tsa-live.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

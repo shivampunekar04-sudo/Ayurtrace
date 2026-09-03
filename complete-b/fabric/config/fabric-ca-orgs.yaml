@@ -1,0 +1,62 @@
+# AyurTrace Complete-B — Fabric CA org / MSP + identity attributes (component 4)
+#
+# HONESTY TAG: 🟢 BUILT config — the CA registration templates that issue role-scoped,
+# attribute-carrying certs. 🔵 DESIGNED for live: run against a real fabric-ca-server per org.
+#
+# Each org runs its own CA. Identities are registered with a `role` attribute embedded in the
+# cert (ecert), which the chaincode reads via getAttributeValue('role') — attribute-based
+# access control, not MSP-membership alone. Revocation is via each CA's CRL (a revoked CFA
+# cert stops working immediately — the DESIGNED backing for CFA identity revocation, spec §2).
+
+registrars:
+  # One CA per org; only the org admin can register that org's identities.
+  - ca: collector-ca.ayurtrace.example
+    org: CollectorOrg
+    identities:
+      - { name: collector-8823, type: client, affiliation: "karnataka.tumkur",
+          attrs: { "role": "COLLECTOR", "hf.Revoker": false } }
+
+  - ca: cfa-ca.ayurtrace.example
+    org: CfaOrg
+    identities:
+      - { name: cfa-tumkur-01, type: client, affiliation: "karnataka.tumkur",
+          # `cfa=true:ecert` embeds the attribute in every issued cert; ecert=true means
+          # it is included by default without being requested per-enrolment.
+          attrs: { "role": "CFA", "cfa": "true" } }
+
+  - ca: aggregator-ca.ayurtrace.example
+    org: AggregatorOrg
+    identities:
+      - { name: aggregator-01, type: client, attrs: { "role": "AGGREGATOR" } }
+
+  - ca: processor-ca.ayurtrace.example
+    org: ProcessorOrg
+    identities:
+      - { name: processor-01, type: client, attrs: { "role": "PROCESSOR" } }
+
+  - ca: lab-ca.ayurtrace.example
+    org: LabOrg
+    identities:
+      # `accredited=SECOND_LAB` lets this lab act as an incentive-independent second endorser.
+      - { name: lab-01, type: client, attrs: { "role": "LAB", "accredited": "PRIMARY" } }
+      - { name: lab-02, type: client, attrs: { "role": "LAB", "accredited": "SECOND_LAB" } }
+
+  - ca: manufacturer-ca.ayurtrace.example
+    org: ManufacturerOrg
+    identities:
+      - { name: manufacturer-01, type: client, attrs: { "role": "MANUFACTURER" } }
+
+  - ca: regulator-ca.ayurtrace.example
+    org: RegulatorOrg   # NMPB / AYUSH — the incentive-independent verifier
+    identities:
+      - { name: nmpb-verifier-01, type: client, attrs: { "role": "REGULATOR" } }
+
+  - ca: consumer-ca.ayurtrace.example
+    org: ConsumerOrg
+    identities:
+      - { name: consumer-app, type: client, attrs: { "role": "CONSUMER" } }  # read-only
+
+# Certificate attributes the chaincode consumes (see fabric/chaincode/rbac-attribute-check.ts):
+#   role        — COLLECTOR | CFA | AGGREGATOR | PROCESSOR | LAB | MANUFACTURER | REGULATOR | CONSUMER
+#   cfa         — "true" on CFA certs (Tier-4 intake)
+#   accredited  — "SECOND_LAB" on labs permitted to co-endorse another lab's test
