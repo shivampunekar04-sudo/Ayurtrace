@@ -1,0 +1,22 @@
+{
+  "name": "@ayurtrace/contracts",
+  "version": "1.0.0",
+  "description": "Frozen EPCIS 2.0 types, reject codes, GACP states, API DTOs and keys shared across all AyurTrace lanes.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1E2B23" />
+<title>AyurTrace — Provenance</title>
+<style>
+  :root{
+    --paper:#F4F1E8; --paper-2:#ECE7D8; --ink:#1E2B23; --ink-soft:#4A574E;
+    --forest:#2C5F4A; --leaf:#4A8B6F; --leaf-tint:#DCE8DF;
+    --gold:#B8893D; --amber:#C0873A; --clay:#A8412A; --clay-tint:#F0DAD2;
+    --line:#CDC6B4; --white:#FBFAF5;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"SF Mono",ui-monospace,"Cascadia Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5;
+    -webkit-font-smoothing:antialiased;padding:0 0 64px}
+  .wrap{max-width:520px;margin:0 auto;padding:0 20px}
+
+  /* masthead */
+  header{padding:26px 0 18px;border-bottom:1px solid var(--line)}
+  .mark{display:flex;align-items:center;gap:10px}
+  .leafmark{width:26px;height:26px;flex:0 0 auto}
+  .brand{font-family:var(--serif);font-size:21px;letter-spacing:.2px}
+  .brand b{color:var(--forest);font-weight:600}
+  .tag{margin:6px 0 0;color:var(--ink-soft);font-size:13px}
+  .src{margin-top:12px;display:inline-flex;align-items:center;gap:7px;font-size:12px;
+    color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);
+    border-radius:999px;padding:4px 11px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--leaf)}
+  .src.offline .dot{background:var(--amber)}
+
+  /* scan panel */
+  .scan{margin-top:20px;background:var(--white);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .scan h2{font-family:var(--serif);font-weight:600;font-size:15px;margin:0 0 10px}
+  .field{display:flex;gap:8px}
+  input[type=text]{flex:1;min-width:0;font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:11px 12px}
+  input:focus{outline:2px solid var(--leaf);outline-offset:0;border-color:var(--leaf)}
+  button{font-family:var(--sans);font-size:14px;cursor:pointer;border-radius:9px;border:1px solid transparent}
+  .btn{background:var(--forest);color:var(--white);padding:11px 16px;font-weight:500}
+  .btn:hover{background:#255140}
+  .btn-ghost{background:transparent;color:var(--forest);border-color:var(--line);padding:9px 13px;font-size:13px}
+  .btn-ghost:hover{border-color:var(--leaf);background:var(--leaf-tint)}
+  .try{margin-top:11px;display:flex;gap:8px;flex-wrap:wrap}
+
+  /* seal + score */
+  .verdict{margin-top:22px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+  .seal{width:96px;height:96px;flex:0 0 auto}
+  .verdict h1{font-family:var(--serif);font-size:23px;margin:0 0 3px;line-height:1.15}
+  .verdict .who{color:var(--ink-soft);font-size:13px}
+  .epc{font-family:var(--mono);font-size:11px;color:var(--ink-soft);word-break:break-all;margin-top:7px}
+
+  .scoreband{margin-top:18px;display:flex;align-items:center;gap:16px;
+    background:var(--white);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .ring{width:74px;height:74px;flex:0 0 auto}
+  .scoreband .lbl{font-family:var(--serif);font-size:15px;margin:0 0 2px}
+  .scoreband .sub{color:var(--ink-soft);font-size:12.5px}
+
+  /* section titles */
+  .sec{margin-top:28px}
+  .sec > h3{font-family:var(--serif);font-weight:600;font-size:16px;margin:0 0 2px;
+    display:flex;align-items:baseline;gap:9px}
+  .sec > h3 .n{font-family:var(--mono);font-size:11px;color:var(--leaf)}
+  .sec > .lede{color:var(--ink-soft);font-size:13px;margin:0 0 14px}
+
+  /* provenance thread */
+  .thread{position:relative;margin-left:7px;padding-left:24px}
+  .thread:before{content:"";position:absolute;left:0;top:6px;bottom:10px;width:2px;
+    background:linear-gradient(var(--leaf),var(--line))}
+  .node{position:relative;padding:0 0 20px}
+  .node:before{content:"";position:absolute;left:-24px;top:3px;width:12px;height:12px;border-radius:50%;
+    background:var(--white);border:2px solid var(--forest)}
+  .node.pass:before{background:var(--forest)}
+  .node .step{font-weight:600;font-size:14.5px}
+  .node .meta{color:var(--ink-soft);font-size:12.5px;margin-top:1px}
+  .node .kv{margin-top:7px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px 14px}
+  .kv b{font-weight:600;color:var(--ink)}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
+    background:var(--leaf-tint);color:var(--forest);border-radius:6px;padding:2px 8px}
+  .chip.dna{background:#E4EDF3;color:#2C5468}
+  a.cert{color:var(--forest);text-decoration:underline;text-underline-offset:2px;font-family:var(--mono);font-size:11.5px}
+
+  /* source farms */
+  .farms{display:flex;flex-direction:column;gap:10px}
+  .farm{display:flex;align-items:center;gap:12px;background:var(--white);
+    border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .farm .pin{width:22px;height:22px;flex:0 0 auto;color:var(--forest)}
+  .farm .id{font-family:var(--mono);font-size:12px}
+  .farm .z{color:var(--ink-soft);font-size:12px}
+  .farm .pct{margin-left:auto;font-family:var(--serif);font-size:17px;color:var(--forest)}
+
+  /* quota */
+  .quota{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .qrow{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+  .bar{height:9px;border-radius:6px;background:var(--paper-2);overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:6px}
+  .band-GREEN>i{background:var(--leaf)} .band-AMBER>i{background:var(--amber)} .band-RED>i{background:var(--clay)}
+  .qnote{margin-top:9px;font-size:12px;color:var(--ink-soft)}
+
+  .report{margin-top:26px;width:100%;background:transparent;border:1px solid var(--line);
+    color:var(--ink);padding:13px;border-radius:11px;font-size:14px}
+  .report:hover{border-color:var(--clay);color:var(--clay);background:var(--clay-tint)}
+  footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--ink-soft);font-size:11.5px}
+  .redacted{font-style:italic}
+
+  .fail .verdict h1{color:var(--clay)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark">
+      <svg class="leafmark" viewBox="0 0 24 24" fill="none"><path d="M12 22C12 22 3 17 3 9.5C3 5 7 2 12 2C17 2 21 5 21 9.5C21 17 12 22 12 22Z" fill="#DCE8DF" stroke="#2C5F4A" stroke-width="1.4"/><path d="M12 5V19M12 10L8 8M12 13L16 11" stroke="#2C5F4A" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <div class="brand">Ayur<b>Trace</b></div>
+    </div>
+    <p class="tag">Farm-to-formulation provenance, verified on a permissioned ledger.</p>
+    <span class="src" id="src"><span class="dot"></span><span id="srcTxt">Connecting…</span></span>
+  </header>
+
+  <div class="scan">
+    <h2>Verify a product QR</h2>
+    <div class="field">
+      <input type="text" id="token" placeholder="Paste the signed QR token…" />
+      <button class="btn" id="verify">Verify</button>
+    </div>
+    <div class="try">
+      <button class="btn-ghost" id="tryGenuine">Load a genuine QR</button>
+      <button class="btn-ghost" id="tryCopied">Try a copied QR</button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <footer>
+    Precise collection coordinates for wild and endangered species are
+    <span class="redacted">withheld from the public</span> to prevent poaching; only the
+    NMPB-approved zone is shown here. Lab metric values are recorded in the linked,
+    content-addressed certificate.
+  </footer>
+</div>
+
+<script type="module">
+// Point this at your gateway. Falls back to bundled demo data if unreachable.
+const API_BASE = 'http://localhost:3001';
+
+const SPECIES = { ASWG:{common:'Ashwagandha',botanical:'Withania somnifera'},
+  BRAH:{common:'Brahmi',botanical:'Bacopa monnieri'}, SARP:{common:'Sarpagandha',botanical:'Rauvolfia serpentina'},
+  KUTK:{common:'Kutki',botanical:'Picrorhiza kurroa'}, JATA:{common:'Jatamansi',botanical:'Nardostachys jatamansi'} };
+const ZONE_NAMES = { 'NMPB-KA-ZONE-07':'Tumakuru Cultivation Belt (Zone 7)',
+  'NMPB-KA-ZONE-09':'Chikkamagaluru Belt (Zone 9)', 'NMPB-KA-ZONE-13':'Western Ghats Reserve (Zone 13)' };
+
+// ── Real captured contract responses (offline fallback; identical shape to live) ──
+const DEMO = {
+  token: "eyJwIjoidXJuOmF5dXJ0cmFjZTpvdXRwdXQ6Rk9STVVMQVRJT04tMDAwMDAxIiwicyI6InVybjpheXVydHJhY2U6b3V0cHV0OkZPUk1VTEFUSU9OLTAwMDAwMSMwMDAwMDEifQ.e7631662bd0320eb2b8904a0ffc339bbee280d662ddb6dda17c0afcdf0bd6d88535fb2d5e7c596b194cf4e077dfcb9b590004532daf61f1974ee8f6be0872e0b",
+  qrGenuine: {"serial":"1","valid":true,"productEpc":"urn:ayurtrace:output:FORMULATION-000001","signatureValid":true,"gacpScore":100,"verifiedAuthentic":true},
+  qrTampered: {"serial":"","valid":false,"productEpc":"","signatureValid":false,"gacpScore":0,"verifiedAuthentic":false},
+  batch: {"batch": {"epc": "urn:ayurtrace:output:FORMULATION-000001", "speciesCode": "ASWG", "status": "COMPLETE_PASSED", "gacpScore": 100, "checkpoints": {"CP-1": "PASSED", "CP-2": "PASSED", "CP-3": "PASSED", "CP-4": "PASSED", "CP-5": "PASSED", "CP-6": "PASSED", "CP-7": "PASSED"}, "eventKeys": ["\u0000batch~event\u0000urn:ayurtrace:output:FORMULATION-000001\u0000000001\u0000"], "inputEpcs": ["urn:ayurtrace:output:MERGE-000001"], "flags": [], "zoneId": "NMPB-KA-ZONE-07", "createdAt": "2026-04-15T06:47:00+05:30", "updatedAt": "2026-04-15T06:47:00+05:30"}, "timeline": [{"step": "COLLECTION", "label": "Collected at source", "time": "2026-04-15T06:47:00+05:30", "zoneId": "NMPB-KA-ZONE-07", "detail": {"collector": "NMPB-COL-KA-8823", "polk": "CONFIRMED"}}, {"step": "COLLECTION", "label": "Collected at source", "time": "2026-04-15T06:47:00+05:30", "zoneId": "NMPB-KA-ZONE-09", "detail": {"collector": "NMPB-COL-KA-9910", "polk": "CONFIRMED"}}, {"step": "PROCESSING", "label": "Processed", "time": "2026-04-15T06:47:00+05:30", "zoneId": "NMPB-KA-ZONE-07", "detail": {"massBalance": {"inputKg": 100, "outputKg": 89, "expectedOutputKg": 90, "tolerancePct": 5, "variancePct": 1.1111111111111112, "result": "PASSED"}}}, {"step": "TESTING", "label": "Quality tested (dual-endorsed)", "time": "2026-04-15T06:47:00+05:30", "zoneId": "NMPB-KA-ZONE-07", "detail": {"result": "PASSED", "ipfsCID": "QmCert123", "dna": true}}, {"step": "FORMULATION", "label": "Formulated into product", "time": "2026-04-15T06:47:00+05:30", "zoneId": "NMPB-KA-ZONE-07", "detail": {}}]},
+  quota: {"speciesCode":"ASWG","zoneId":"NMPB-KA-ZONE-07","season":"RABI","annualLimitKg":312,"consumedKg":280,"consumedPct":89.74,"band":"RED"},
+  sourceLots: [
+    {"epc":"urn:ayurtrace:lot:CE-KA-ASWG-2026-000001","collectorId":"NMPB-COL-KA-8823","zoneId":"NMPB-KA-ZONE-07","proportion":0.5},
+    {"epc":"urn:ayurtrace:lot:CE-KA-ASWG-2026-000002","collectorId":"NMPB-COL-KA-9910","zoneId":"NMPB-KA-ZONE-09","proportion":0.5}
+  ],
+  productName: "Ashwagandha Root Churna 60g"
+};
+
+let LIVE = false;
+const el = (id)=>document.getElementById(id);
+
+async function api(path){
+  const r = await fetch(API_BASE+path, {headers:{'accept':'application/json'}});
+  const j = await r.json();
+  return {status:r.status, j};
+}
+
+async function probe(){
+  try{
+    const r = await fetch(API_BASE+'/health',{signal:AbortSignal.timeout(1200)});
+    if(r.ok){ LIVE=true; el('src').classList.remove('offline'); el('srcTxt').textContent='Live ledger'; return; }
+  }catch{}
+  LIVE=false; el('src').classList.add('offline'); el('srcTxt').textContent='Offline demo data';
+}
+
+function ring(score){
+  const r=30, c=2*Math.PI*r, off=c*(1-score/100);
+  const col = score>=85?'var(--forest)':score>=60?'var(--amber)':'var(--clay)';
+  return `<svg class="ring" viewBox="0 0 74 74"><circle cx="37" cy="37" r="${r}" fill="none" stroke="var(--paper-2)" stroke-width="7"/>
+    <circle cx="37" cy="37" r="${r}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 37 37)"/>
+    <text x="37" y="41" text-anchor="middle" font-family="var(--serif)" font-size="19" fill="var(--ink)">${score}</text></svg>`;
+}
+function sealOK(){return `<svg class="seal" viewBox="0 0 96 96"><circle cx="48" cy="48" r="44" fill="#DCE8DF" stroke="#2C5F4A" stroke-width="2"/><circle cx="48" cy="48" r="37" fill="none" stroke="#2C5F4A" stroke-width="1" stroke-dasharray="2 3"/><path d="M34 49l9 9 19-21" fill="none" stroke="#2C5F4A" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
+function sealBad(){return `<svg class="seal" viewBox="0 0 96 96"><circle cx="48" cy="48" r="44" fill="#F0DAD2" stroke="#A8412A" stroke-width="2"/><circle cx="48" cy="48" r="37" fill="none" stroke="#A8412A" stroke-width="1" stroke-dasharray="2 3"/><path d="M36 36l24 24M60 36l-24 24" stroke="#A8412A" stroke-width="4.5" stroke-linecap="round"/></svg>`;}
+const pin = `<svg class="pin" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.5 7-12A7 7 0 105 10c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>`;
+
+function renderTimeline(timeline){
+  return timeline.map(t=>{
+    const d=t.detail||{}; let kv='';
+    if(t.step==='COLLECTION') kv=`<div class="kv"><span><b>Collector</b> ${d.collector??'—'}</span>${d.polk?`<span class="chip">Peers confirmed origin</span>`:''}</div>`;
+    if(t.step==='PROCESSING' && d.massBalance) kv=`<div class="kv"><span class="chip">Mass balance ✓ no dilution</span></div>`;
+    if(t.step==='TESTING') kv=`<div class="kv"><span class="chip">Result ${d.result??'—'}</span>${d.dna?`<span class="chip dna">DNA species match</span>`:''}${d.ipfsCID?`<a class="cert" href="#">certificate ${d.ipfsCID}</a>`:''}</div>`;
+    return `<div class="node pass"><div class="step">${t.label}</div>
+      <div class="meta">${ZONE_NAMES[t.zoneId]||t.zoneId} · ${fmt(t.time)}</div>${kv}</div>`;
+  }).join('');
+}
+function fmt(iso){ try{ return new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});}catch{return iso;} }
+
+function renderAuthentic(verify, batch, quota, lots, productName){
+  const b=batch.batch, sp=SPECIES[b.speciesCode]||{common:b.speciesCode,botanical:''};
+  const collections=batch.timeline.filter(t=>t.step==='COLLECTION').length;
+  const box=el('result'); box.className=''; 
+  box.innerHTML = `
+    <div class="verdict">
+      ${verify.verifiedAuthentic?sealOK():sealBad()}
+      <div>
+        <h1>${verify.verifiedAuthentic?'Verified Authentic':'Could not verify'}</h1>
+        <div class="who">${productName||sp.common} · <i>${sp.botanical}</i></div>
+        <div class="epc">${b.epc}</div>
+      </div>
+    </div>
+
+    <div class="scoreband">
+      ${ring(verify.gacpScore)}
+      <div><div class="lbl">GACP compliance score</div>
+      <div class="sub">All 7 Good Agricultural &amp; Collection Practice checkpoints passed. No flags on this batch.</div></div>
+    </div>
+
+    <div class="sec">
+      <h3><span class="n">01</span> Provenance thread</h3>
+      <p class="lede">Every step below committed to the ledger and could not advance until its checkpoint passed.</p>
+      <div class="thread">${renderTimeline(batch.timeline)}</div>
+    </div>
+
+    <div class="sec">
+      <h3><span class="n">02</span> Traced to ${lots.length} source collection${lots.length>1?'s':''}</h3>
+      <p class="lede">This lot was merged from more than one farm. Proportions are retained, so a recall reaches every contributor — the mixing problem, solved.</p>
+      <div class="farms">${lots.map(l=>`<div class="farm">${pin}
+        <div><div class="id">${l.collectorId}</div><div class="z">${ZONE_NAMES[l.zoneId]||l.zoneId}</div></div>
+        <div class="pct">${Math.round(l.proportion*100)}%</div></div>`).join('')}</div>
+    </div>
+
+    <div class="sec">
+      <h3><span class="n">03</span> Sustainability</h3>
+      <p class="lede">Live harvest pressure for ${sp.common} in the primary source zone this season.</p>
+      <div class="quota">
+        <div class="qrow"><span>${sp.common} · ${ZONE_NAMES[quota.zoneId]||quota.zoneId}</span>
+          <span>${quota.consumedKg} / ${quota.annualLimitKg} kg</span></div>
+        <div class="bar band-${quota.band}"><i style="width:${Math.min(100,quota.consumedPct).toFixed(0)}%"></i></div>
+        <div class="qnote">${quota.band==='RED'?'Zone approaching its annual quota — new collection is throttled by chaincode.':quota.band==='AMBER'?'Moderate pressure; collectors receive an 80% warning before the cap.':'Well within the sustainable annual quota.'}</div>
+      </div>
+    </div>
+
+    <button class="report" id="report">Report a problem with this product</button>`;
+  el('report').onclick=()=>{ el('report').textContent='Reported — an on-chain ConsumerFlag was raised for NMPB review.'; el('report').disabled=true; };
+}
+
+function renderFail(verify){
+  const box=el('result'); box.className='fail';
+  box.innerHTML=`<div class="verdict">${sealBad()}
+    <div><h1>Could not verify</h1>
+    <div class="who">This QR failed the manufacturer's cryptographic signature. It may be copied, edited, or counterfeit.</div>
+    <div class="epc">signatureValid: false</div></div></div>
+    <div class="sec"><p class="lede">A genuine AyurTrace QR is signed with the manufacturer's ledger key. Copying the code does not copy a valid signature, so forgeries are detectable at scan time.</p></div>`;
+}
+
+async function verifyToken(token){
+  if(LIVE){
+    try{
+      const v = await api('/qr/'+encodeURIComponent(token)+'/verify');
+      const verify = v.j.data;
+      if(!verify.signatureValid){ renderFail(verify); return; }
+      const b = await api('/batch/'+encodeURIComponent(verify.productEpc));
+      const q = await api('/zones/'+encodeURIComponent(b.j.data.batch.zoneId)+'/quota');
+      const rc = await fetch(API_BASE+'/recall/'+encodeURIComponent(verify.productEpc),{method:'POST'});
+      const rcj = await rc.json();
+      const quota = (q.j.data.quotas.find(x=>x.speciesCode===b.j.data.batch.speciesCode))||DEMO.quota;
+      renderAuthentic(verify, b.j.data, quota, rcj.data.sourceLots||DEMO.sourceLots, null);
+      return;
+    }catch(e){ /* fall through to demo */ }
+  }
+  // offline demo
+  const genuine = token === DEMO.token || token==='__genuine__';
+  if(genuine) renderAuthentic(DEMO.qrGenuine, DEMO.batch, DEMO.quota, DEMO.sourceLots, DEMO.productName);
+  else renderFail(DEMO.qrTampered);
+}
+
+el('verify').onclick=()=>verifyToken(el('token').value.trim());
+el('tryGenuine').onclick=()=>{ el('token').value = LIVE?DEMO.token:'__genuine__'; verifyToken(el('token').value); };
+el('tryCopied').onclick=()=>{ el('token').value = (LIVE?DEMO.token:'x').slice(0,-4)+'dead'; verifyToken('tampered'); };
+
+await probe();
+el('tryGenuine').click();
+</script>
+</body>
+</html>

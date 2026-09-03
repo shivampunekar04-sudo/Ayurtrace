@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#2C5F4A" />
+<title>AyurTrace — Collector</title>
+<style>
+  :root{
+    --paper:#F4F1E8; --paper-2:#ECE7D8; --ink:#1E2B23; --ink-soft:#4A574E;
+    --forest:#2C5F4A; --leaf:#4A8B6F; --leaf-tint:#DCE8DF;
+    --gold:#B8893D; --amber:#C0873A; --clay:#A8412A; --clay-tint:#F0DAD2;
+    --line:#CDC6B4; --white:#FBFAF5;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.45}
+  .wrap{max-width:520px;margin:0 auto;padding:0 18px 40px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line)}
+  .mark{display:flex;align-items:center;gap:9px}
+  .brand{font-family:var(--serif);font-size:19px} .brand b{color:var(--forest)}
+  .net{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);
+    background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+  .net .dot{width:7px;height:7px;border-radius:50%;background:var(--leaf)}
+  .net.off .dot{background:var(--amber)}
+
+  h1{font-family:var(--serif);font-weight:600;font-size:22px;margin:20px 0 3px}
+  .sub{color:var(--ink-soft);font-size:13.5px;margin:0 0 18px}
+
+  label{display:block;font-size:12.5px;color:var(--ink-soft);margin:16px 0 8px;font-weight:600}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  .pick{background:var(--white);border:1.5px solid var(--line);border-radius:13px;
+    padding:12px 8px;text-align:center;cursor:pointer;transition:.12s}
+  .pick:hover{border-color:var(--leaf)}
+  .pick.on{border-color:var(--forest);background:var(--leaf-tint)}
+  .pick .ic{font-size:24px;line-height:1;display:block;margin-bottom:6px}
+  .pick .nm{font-size:12.5px;font-weight:600}
+  .pick .lt{font-size:10.5px;color:var(--ink-soft);font-style:italic}
+
+  .qty{display:flex;align-items:center;gap:12px;background:var(--white);border:1.5px solid var(--line);
+    border-radius:13px;padding:8px}
+  .qty button{width:46px;height:46px;font-size:24px;border:none;background:var(--paper-2);
+    border-radius:9px;color:var(--forest);cursor:pointer}
+  .qty input{flex:1;border:none;background:transparent;text-align:center;font-family:var(--serif);
+    font-size:26px;color:var(--ink);width:100%}
+  .qty .u{color:var(--ink-soft);padding-right:8px}
+
+  .gps{display:flex;align-items:center;gap:11px;background:var(--white);border:1.5px solid var(--line);
+    border-radius:13px;padding:13px}
+  .gps svg{color:var(--forest);flex:0 0 auto}
+  .gps .z{font-weight:600;font-size:14px} .gps .c{font-size:12px;color:var(--ink-soft)}
+  .gps .ok{margin-left:auto;font-size:12px;color:var(--forest)}
+
+  .submit{margin-top:22px;width:100%;background:var(--forest);color:var(--white);border:none;
+    border-radius:13px;padding:16px;font-size:16px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+  .submit:hover{background:#255140} .submit:disabled{opacity:.5}
+
+  .result{margin-top:18px;border-radius:14px;padding:16px;border:1.5px solid}
+  .result.ok{background:var(--leaf-tint);border-color:var(--forest)}
+  .result.no{background:var(--clay-tint);border-color:var(--clay)}
+  .result h3{font-family:var(--serif);margin:0 0 5px;font-size:17px}
+  .result.ok h3{color:var(--forest)} .result.no h3{color:var(--clay)}
+  .result .msg{font-size:13.5px}
+  .result .kv{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--ink-soft);word-break:break-all}
+  .result .code{display:inline-block;font-family:var(--mono);font-size:11px;background:#fff;
+    border:1px solid var(--clay);color:var(--clay);border-radius:6px;padding:2px 7px;margin-top:8px}
+
+  .queue{margin-top:16px;font-size:12.5px;color:var(--ink-soft)}
+  .queue b{color:var(--ink)}
+  .toggle{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12.5px;color:var(--forest);
+    margin-top:6px;background:none;border:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 22C12 22 3 17 3 9.5C3 5 7 2 12 2C17 2 21 5 21 9.5C21 17 12 22 12 22Z" fill="#DCE8DF" stroke="#2C5F4A" stroke-width="1.4"/><path d="M12 5V19M12 10L8 8M12 13L16 11" stroke="#2C5F4A" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <div class="brand">Ayur<b>Trace</b> Collector</div>
+    </div>
+    <span class="net" id="net"><span class="dot"></span><span id="netTxt">…</span></span>
+  </header>
+
+  <h1>Log a collection</h1>
+  <p class="sub">Collector <b id="who">NMPB-COL-KA-8823</b> · Tumakuru cluster</p>
+
+  <label>Species</label>
+  <div class="grid3" id="species"></div>
+
+  <label>Plant part</label>
+  <div class="grid2" id="parts"></div>
+
+  <label>Quantity harvested</label>
+  <div class="qty">
+    <button id="minus">−</button>
+    <input id="qty" type="text" inputmode="decimal" value="45" />
+    <span class="u">kg</span>
+    <button id="plus">+</button>
+  </div>
+
+  <label>Location</label>
+  <div class="gps">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.5 7-12A7 7 0 105 10c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
+    <div><div class="z" id="zoneName">Tumakuru Cultivation Belt (Zone 7)</div>
+    <div class="c">Auto-captured · shown to the public as zone only</div></div>
+    <span class="ok" id="gpsOk">GPS ✓</span>
+  </div>
+
+  <button class="submit" id="submit">Submit to ledger</button>
+
+  <div id="out"></div>
+
+  <div class="queue" id="queue"></div>
+  <button class="toggle" id="simOffline">◐ Simulate no signal (queue offline)</button>
+</div>
+
+<script type="module">
+const API_BASE='http://localhost:3001';
+const ZONES={ 'NMPB-KA-ZONE-07':{name:'Tumakuru Cultivation Belt (Zone 7)',lat:13.3409,lon:77.1018,alt:842},
+  'NMPB-KA-ZONE-09':{name:'Chikkamagaluru Belt (Zone 9)',lat:13.3401,lon:75.77,alt:910},
+  'NMPB-KA-ZONE-13':{name:'Western Ghats Reserve (Zone 13)',lat:12.5,lon:75.4,alt:1100},
+  'OUT':{name:'Unapproved location (Mumbai)',lat:19.076,lon:72.8777,alt:14} };
+const SPECIES=[
+  {code:'ASWG',ic:'🌿',nm:'Ashwagandha',lt:'W. somnifera'},
+  {code:'BRAH',ic:'💧',nm:'Brahmi',lt:'B. monnieri'},
+  {code:'SARP',ic:'🐍',nm:'Sarpagandha',lt:'R. serpentina'},
+  {code:'KUTK',ic:'🏔️',nm:'Kutki',lt:'P. kurroa'},
+  {code:'JATA',ic:'🌾',nm:'Jatamansi',lt:'N. jatamansi'},
+];
+const PARTS=[{v:'ROOT',ic:'🥕',nm:'Root'},{v:'LEAF',ic:'🍃',nm:'Leaf'},{v:'WHOLE',ic:'🌱',nm:'Whole plant'},{v:'BARK',ic:'🪵',nm:'Bark'}];
+const REJECT_MESSAGES={
+  ZONE_VIOLATION:'Outside the approved collection zone for this species. Move to an NMPB-approved zone or select the correct species.',
+  SEASON_VIOLATION:'This species cannot be collected in the current season. Check the permitted harvest window.',
+  QUOTA_EXCEEDED:'The annual sustainable quota for this species in this zone is exhausted. Collection reopens next season.',
+  LICENSE_INVALID:'Your NMPB collector registration is inactive or expired. Renew it before submitting.',
+  PART_VIOLATION:'This plant part is not permitted for this species under GACP. Collect the allowed part.',
+  VALIDATION:'Some fields are missing or invalid. Check the form and try again.'
+};
+let sel={species:'ASWG',part:'ROOT',zone:'NMPB-KA-ZONE-07',offline:false};
+let queued=0, LIVE=false;
+const el=id=>document.getElementById(id);
+
+el('species').innerHTML=SPECIES.map(s=>`<div class="pick ${s.code==='ASWG'?'on':''}" data-s="${s.code}"><span class="ic">${s.ic}</span><span class="nm">${s.nm}</span><span class="lt">${s.lt}</span></div>`).join('');
+el('parts').innerHTML=PARTS.map(p=>`<div class="pick ${p.v==='ROOT'?'on':''}" data-p="${p.v}"><span class="ic">${p.ic}</span><span class="nm">${p.nm}</span></div>`).join('');
+el('species').onclick=e=>{const c=e.target.closest('[data-s]');if(!c)return;sel.species=c.dataset.s;
+  [...el('species').children].forEach(x=>x.classList.toggle('on',x===c));};
+el('parts').onclick=e=>{const c=e.target.closest('[data-p]');if(!c)return;sel.part=c.dataset.p;
+  [...el('parts').children].forEach(x=>x.classList.toggle('on',x===c));};
+
+el('minus').onclick=()=>el('qty').value=Math.max(0,(+el('qty').value||0)-5);
+el('plus').onclick=()=>el('qty').value=(+el('qty').value||0)+5;
+
+el('simOffline').onclick=()=>{ sel.offline=!sel.offline;
+  el('simOffline').textContent=sel.offline?'◑ Offline mode ON — events queue on device':'◐ Simulate no signal (queue offline)';
+  el('net').classList.toggle('off',sel.offline); el('netTxt').textContent=sel.offline?'No signal':(LIVE?'Live ledger':'Demo'); };
+
+// hidden dev affordance: double-tap the GPS chip to test an out-of-zone reject
+let taps=0; el('gpsOk').onclick=()=>{ taps++; if(taps%2===0){sel.zone='OUT';el('zoneName').textContent=ZONES.OUT.name;el('gpsOk').textContent='GPS ⚠';}
+  else {sel.zone='NMPB-KA-ZONE-07';el('zoneName').textContent=ZONES['NMPB-KA-ZONE-07'].name;el('gpsOk').textContent='GPS ✓';} };
+
+function renderQueue(){ el('queue').innerHTML = queued?`<b>${queued}</b> event${queued>1?'s':''} queued on device — will sync automatically when a signal returns.`:''; }
+
+async function probe(){ try{ const r=await fetch(API_BASE+'/health',{signal:AbortSignal.timeout(1200)}); if(r.ok){LIVE=true;} }catch{} 
+  el('net').classList.toggle('off',!LIVE&&!sel.offline); el('netTxt').textContent=sel.offline?'No signal':(LIVE?'Live ledger':'Demo'); }
+
+function showOk(d){ el('out').innerHTML=`<div class="result ok"><h3>Committed to the ledger</h3>
+  <div class="msg">Your collection passed all five Medicinal Plants Registry checks and is now permanently recorded.</div>
+  <div class="kv">batch ${d.epc}<br>tx ${d.txId}<br>GACP score ${d.gacpScore}/100</div></div>`; }
+function showQueued(){ queued++; renderQueue(); el('out').innerHTML=`<div class="result ok"><h3>Saved on device</h3>
+  <div class="msg">No signal right now. This event is queued and will sync — you'll get an SMS with the batch ID and tx hash once it commits.</div></div>`; }
+function showNo(code){ el('out').innerHTML=`<div class="result no"><h3>Not recorded</h3>
+  <div class="msg">${REJECT_MESSAGES[code]||code}</div><span class="code">${code}</span></div>`; }
+
+// offline demo outcomes mirror the chaincode's real decisions
+function demoDecision(req){
+  if(req.location.lat>18) return {reject:'ZONE_VIOLATION'};
+  if(req.speciesCode==='ASWG'&&req.plantPart!=='ROOT'&&req.plantPart!=='WHOLE') return {reject:'PART_VIOLATION'};
+  if(!(req.quantityKg>0)) return {reject:'VALIDATION'};
+  return {ok:{epc:'urn:ayurtrace:lot:CE-KA-ASWG-2026-000007',txId:'demo-tx-'+Math.random().toString(16).slice(2,10),gacpScore:40}};
+}
+
+el('submit').onclick=async()=>{
+  const z=ZONES[sel.zone];
+  const req={ speciesCode:sel.species, quantityKg:+el('qty').value||0, plantPart:sel.part,
+    collectorId:'NMPB-COL-KA-8823', season:'RABI',
+    location:{lat:z.lat,lon:z.lon,altitudeM:z.alt}, entryMethod:sel.offline?'TIER2_OFFLINE':'TIER1_PWA' };
+  if(sel.offline){ showQueued(); return; }
+  el('submit').disabled=true; el('submit').textContent='Submitting…';
+  try{
+    if(LIVE){
+      const r=await fetch(API_BASE+'/events/collection',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(req)});
+      const j=await r.json();
+      if(j.ok) showOk(j.data); else showNo(j.code);
+    }else{
+      const d=demoDecision(req); d.ok?showOk(d.ok):showNo(d.reject);
+    }
+  }catch(e){ const d=demoDecision(req); d.ok?showOk(d.ok):showNo(d.reject); }
+  el('submit').disabled=false; el('submit').textContent='Submit to ledger';
+};
+
+await probe();
+</script>
+</body>
+</html>
