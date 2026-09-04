@@ -29,7 +29,10 @@ EndorsementPolicies:
   Aggregation:     "OR('AggregatorMSP.member')"
   Processing:      "OR('ProcessorMSP.member')"
   Merge:           "OR('AggregatorMSP.member')"
-  QualityTest:     "AND('LabMSP.member', OR('RegulatorMSP.member','LabMSP.member'))"
+  # Incentive-independence: the testing Lab AND a distinct Regulator must both sign — the
+  # Lab can never satisfy this alone. (A "second distinct lab" alternative would need its own
+  # MSP, e.g. Lab2MSP; with a single LabMSP the independent co-signer is the Regulator.)
+  QualityTest:     "AND('LabMSP.member','RegulatorMSP.member')"
   Formulation:     "OR('ManufacturerMSP.member')"
   Recall:          "OR('RegulatorMSP.member')"
 

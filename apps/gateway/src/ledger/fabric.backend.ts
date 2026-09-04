@@ -76,16 +76,31 @@ export class FabricLedgerBackend implements LedgerBackend {
   }
 
   private parseError(e: unknown): never {
-    // Chaincode throws Error(JSON({ok:false,code})) on a business reject.
-    const msg = e instanceof Error ? e.message : String(e);
-    const match = msg.match(/\{.*\}/s);
-    if (match) {
-      try {
-        const parsed = JSON.parse(match[0]);
-        if (parsed.ok === false && parsed.code) throw new LedgerReject(parsed.code, parsed.detail);
-      } catch (inner) {
-        if (inner instanceof LedgerReject) throw inner;
+    // Chaincode throws Error(JSON({ok:false,code,detail})) on a business reject.
+    // Over @hyperledger/fabric-gateway that JSON does NOT arrive in e.message — it
+    // is carried in the GatewayError's `details[]` (one entry per endorsing peer,
+    // {address, mspId, message}) and sometimes in `cause`. Scan all of them.
+    const anyE = e as { message?: unknown; cause?: { message?: unknown };
+      details?: Array<{ message?: unknown } | string> };
+    const texts: string[] = [];
+    if (e instanceof Error && typeof anyE.message === 'string') texts.push(anyE.message);
+    if (typeof anyE.cause?.message === 'string') texts.push(anyE.cause.message);
+    if (Array.isArray(anyE.details)) {
+      for (const d of anyE.details) {
+        if (typeof d === 'string') texts.push(d);
+        else if (d && typeof d.message === 'string') texts.push(d.message);
       }
+    }
+    for (const t of texts) {
+      const match = t.match(/\{"ok":false.*\}/s);
+      if (!match) continue;
+      let parsed: { ok?: boolean; code?: RejectCode; detail?: Record<string, unknown> };
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch {
+        continue;
+      }
+      if (parsed.ok === false && parsed.code) throw new LedgerReject(parsed.code, parsed.detail);
     }
     throw e;
   }
