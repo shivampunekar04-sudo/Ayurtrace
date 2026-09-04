@@ -15,6 +15,14 @@
   .chk.fail{background:var(--clay-tint);border-color:#e3b8ac}
   .quota-mini{margin-top:6px}
   .gps{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+  .ai-drop{border:2px dashed #bcd6c6;border-radius:11px;background:var(--paper);
+    padding:16px;text-align:center;cursor:pointer;transition:.15s;color:var(--ink-soft);font-size:13px}
+  .ai-drop:hover{border-color:var(--leaf);background:var(--leaf-tint)}
+  .ai-drop.over{border-color:var(--leaf);background:var(--leaf-tint);color:var(--ink)}
+  .ai-drop.busy{opacity:.7;pointer-events:none}
+  .ai-drop img.prev{max-height:90px;border-radius:8px;margin-bottom:8px;display:block;margin-inline:auto}
+  .ai-res{margin-top:6px;font-size:12.5px}
+  .ai-res .hit{color:var(--leaf);font-weight:600}
 </style>
 </head>
 <body>
@@ -29,6 +37,14 @@
       <label>Collector</label>
       <select id="collector"></select>
       <div class="small muted" id="collector-note" style="margin-top:5px"></div>
+    </div>
+    <div class="field">
+      <label>Identify species from a photo <span class="chip">AI</span></label>
+      <div id="drop" class="ai-drop">
+        <input id="imgfile" type="file" accept="image/*" hidden />
+        <div id="drop-inner">📷 Drag &amp; drop a herb photo here, or <u>click to choose</u> — the AI picks the species.</div>
+      </div>
+      <div id="ai-res" class="ai-res muted"></div>
     </div>
     <div class="row">
       <div class="field">
@@ -79,6 +95,7 @@
 <script src="/assets/app.js"></script>
 <script>
 AT.chrome('Collector · field entry', '/collector.html');
+AT.gate('COLLECTOR');
 
 let SPECIES = [], ZONES = [], override = null; // override = manual/GPS point
 
@@ -207,6 +224,48 @@ AT.$('#usegps').addEventListener('click', ()=>{
 });
 AT.$('#offzone').addEventListener('click', ()=>{ override = { lat:19.0760, lon:72.8777, altitudeM:14 }; renderGps(); });
 AT.$('#submit').addEventListener('click', submit);
+
+// ---- AI species-from-photo ------------------------------------------------
+(function(){
+  const drop = AT.$('#drop'), imgfile = AT.$('#imgfile'), res = AT.$('#ai-res');
+  const stop = e => { e.preventDefault(); e.stopPropagation(); };
+  ['dragenter','dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev, stop));
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, ()=>drop.classList.add('over')));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, ()=>drop.classList.remove('over')));
+  drop.addEventListener('drop', e=> handle(e.dataTransfer.files && e.dataTransfer.files[0]));
+  drop.addEventListener('click', ()=> imgfile.click());
+  imgfile.addEventListener('change', ()=> handle(imgfile.files && imgfile.files[0]));
+
+  async function handle(file){
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ res.className='ai-res muted'; res.textContent='Please drop an image file.'; return; }
+    const inner = AT.$('#drop-inner');
+    inner.innerHTML = `<img class="prev" src="${URL.createObjectURL(file)}" alt="preview" />🔍 Identifying species…`;
+    drop.classList.add('busy'); res.className='ai-res muted'; res.textContent='';
+    try{
+      const fd = new FormData(); fd.append('image', file, file.name);
+      const r = await fetch('/species/identify', { method:'POST', body: fd });
+      const j = await r.json();
+      const d = j.data;
+      if(j.ok === false || !d || !d.code){
+        res.className='ai-res muted';
+        res.innerHTML = `Couldn't match a tracked species. ${AT.esc((d&&d.note)||j.message||'')}`;
+      } else {
+        const ss = AT.$('#species'); ss.value = d.code; ss.dispatchEvent(new Event('change'));
+        const pct = Math.round((d.confidence||0)*100);
+        res.className='ai-res';
+        res.innerHTML = `<span class="hit">✓ Recognised ${AT.esc(d.commonName)}</span> `+
+          `<span class="muted">(${AT.esc(d.scientificName||'')} · ${pct}%${d.source==='demo'?' · demo':''})</span> — species selected below.`;
+        // if the collector had declared a different species, flag the mismatch
+      }
+    }catch(e){
+      res.className='ai-res muted'; res.textContent = 'Upload failed: '+(e.message||e);
+    }finally{
+      drop.classList.remove('busy');
+      inner.innerHTML = '📷 Drag &amp; drop a herb photo here, or <u>click to choose</u> — the AI picks the species.';
+    }
+  }
+})();
 </script>
 </body>
 </html>

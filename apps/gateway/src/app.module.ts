@@ -12,11 +12,11 @@ import { ZonesController } from './zones/zones.controller.js';
 import { RecallController } from './recall/recall.controller.js';
 import { RegistryController } from './registry/registry.controller.js';
 import { QrController } from './qr/qr.controller.js';
-import { IpfsController } from './ipfs/ipfs.controller.js';
-import { IpfsService } from './ipfs/ipfs.service.js';
-import { FhirController } from './fhir/fhir.controller.js';
-import { FhirService } from './fhir/fhir.service.js';
 import { AdminController } from './admin.controller.js';
+import { SpeciesIdentifyController } from './species/identify.controller.js';
+import { SpeciesIdentifyService } from './species/identify.service.js';
+import { LabReportExtractController } from './lab/extract.controller.js';
+import { LabReportExtractService } from './lab/extract.service.js';
 import { backendKind } from './config/env.js';
 
 function backendClass(): Type<LedgerBackend> {
@@ -32,12 +32,13 @@ const backendProvider: Provider = { provide: LEDGER_BACKEND, useClass: backendCl
 @Module({
   controllers: [
     EventsController, BatchController, ZonesController, RecallController,
-    RegistryController, QrController, IpfsController, FhirController, AdminController,
+    RegistryController, QrController, AdminController, SpeciesIdentifyController,
+    LabReportExtractController,
   ],
   providers: [
     QrService,
-    IpfsService,
-    FhirService,
+    SpeciesIdentifyService,
+    LabReportExtractService,
     backendProvider,
     { provide: APP_FILTER, useClass: RejectFilter },
   ],

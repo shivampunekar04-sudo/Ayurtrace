@@ -1,0 +1,34 @@
+================================================================
+        SHREE AYURVEDIC ANALYTICAL LABORATORY
+        NABL-Accredited (Cert. No. TC-1207)  |  AYUSH / GACP
+================================================================
+        CERTIFICATE OF ANALYSIS
+
+Report No.       : SAAL/2026/04471
+Date of Report   : 2026-09-05
+Sample / Batch   : urn:ayurtrace:lot:CE-KA-ASWG-2026-000001
+Species          : Ashwagandha (Withania somnifera)
+Part Tested      : Root
+Testing Lab MSP  : LabMSP
+Independent Verifier : RegulatorMSP  (NMPB — incentive-independent co-signer)
+
+---------------------- TEST RESULTS ----------------------------
+Parameter              Result     Unit     Limit     Status
+Moisture               8.2        %        10        PASS
+Lead (Pb)              0.90       ppm      10        PASS
+Arsenic (As)           1.10       ppm      3         PASS
+Mercury (Hg)           0.05       ppm      1         PASS
+Cadmium (Cd)           0.20       ppm      0.3       PASS
+Pesticide (total)      0.01       ppm      0.5       PASS
+----------------------------------------------------------------
+
+DNA Barcode Check : declared Withania somnifera = confirmed Withania somnifera  (MATCH)
+Lab Report IPFS   : QmLabReport4471DemoCID
+Overall Result    : PASS
+
+Authorised Signatory : Dr. A. Rao, Chief Analyst
+Digital Sign / Seal  : [NABL-1207 / 2026-09-05]
+================================================================
+This certificate is machine-readable. Values are extracted and written to the
+AyurTrace ledger exactly as issued — the analyst cannot retype approximate
+numbers into the dashboard.
