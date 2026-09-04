@@ -20,7 +20,9 @@
   .pick.dim{opacity:.5}
   .hintline{font-size:12px;color:var(--ink-soft);margin:2px 0 12px}
   .qr{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px}
-  .qr canvas{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+  .qr canvas,.qr .qrimg{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+  #scan-hint{color:var(--ink-soft)} #scan-hint b{color:var(--forest)}
+  #scan-hint.warn{color:#8a5a1a}
   .unit{font-family:var(--mono);font-size:11px;word-break:break-all;background:var(--paper);
     border:1px solid var(--line);border-radius:8px;padding:8px}
 </style>
@@ -130,7 +132,6 @@
 <footer class="foot">Every event here is committed to the same ledger the collector and regulator read.
   Refresh the regulator dashboard after each step to watch the batch advance.</footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="/assets/app.js"></script>
 <script>
 AT.chrome('Supply chain · operators', '/operator.html');
@@ -143,6 +144,22 @@ function fileToB64(file){
     r.onerror = ()=> reject(new Error('file read failed'));
     r.readAsDataURL(file);
   });
+}
+
+// Tell the operator whether a phone can actually scan the QR (localhost is not phone-reachable).
+async function showScanHint(){
+  const el = document.getElementById('scan-hint'); if(!el) return;
+  const onLocalhost = /^(localhost|127\.|\[::1\])/.test(location.hostname);
+  if(!onLocalhost){
+    el.className=''; el.innerHTML = `📱 A phone on the same Wi-Fi can scan it now — it points to <b>${AT.esc(location.host)}</b>.`;
+    return;
+  }
+  let lan = '';
+  try{ const d = await AT.get('/net'); lan = (d.lanUrls&&d.lanUrls[0])||''; }catch(_){}
+  el.className='warn';
+  el.innerHTML = lan
+    ? `⚠ This QR points to <b>localhost</b>, which a phone can't open. Re-open the dashboard at <b>${AT.esc(lan)}/operator.html</b> (same Wi-Fi), then formulate again — the QR will point there and your phone can scan it.`
+    : `⚠ This QR points to localhost, which a phone can't open. Open the dashboard via your laptop's LAN IP (same Wi-Fi) so the QR is phone-reachable.`;
 }
 
 async function refresh(){
@@ -255,14 +272,16 @@ AT.$('#form-go').addEventListener('click', async ()=>{
       inputEpcs: sel.map(s=>s.epc), productName:AT.$('#form-name').value,
       unitCount:Number(AT.$('#form-units').value), manufacturerMsp:AT.$('#form-mfr').value });
     const first = d.units[0];
+    const qrSrc = '/qr/'+encodeURIComponent(first.token)+'/qr.svg';
     let html = `<b>Formulated.</b> Product <span class="mono">${AT.esc(AT.shortEpc(d.productEpc))}</span> · ${d.units.length} unit(s) minted with signed QRs.`;
-    html += `<div class="qr"><div id="qrbox"></div><div style="flex:1;min-width:220px">
-      <div class="small muted" style="margin-bottom:6px">Unit 1 signed token (this is what the printed QR encodes):</div>
-      <div class="unit">${AT.esc(first.token.slice(0,120))}…</div>
-      <div style="margin-top:10px"><a class="btn-ghost" href="/consumer.html?token=${encodeURIComponent(first.token)}">Verify this QR as a consumer →</a></div>
+    html += `<div class="qr"><img class="qrimg" src="${qrSrc}" alt="Scan to verify this product" width="200" height="200"/><div style="flex:1;min-width:220px">
+      <div class="small muted" style="margin-bottom:6px">Scan this with any phone camera to open the product's provenance. It encodes the manufacturer-signed token, so a copied QR fails verification.</div>
+      <div id="scan-hint" class="small"></div>
+      <div style="margin-top:10px"><a class="btn-ghost" href="/consumer.html?token=${encodeURIComponent(first.token)}">Open verification here →</a>
+      <a class="btn-ghost" href="${qrSrc}" download="ayurtrace-qr.svg">Download QR</a></div>
     </div></div>`;
     banner('form-res', true, html);
-    try{ new QRCode(document.getElementById('qrbox'), { text: location.origin+'/consumer.html?token='+encodeURIComponent(first.token), width:132, height:132, colorDark:'#1E2B23', colorLight:'#ffffff' }); }catch(_){}
+    showScanHint();
     refresh();
   }catch(e){ banner('form-res', false, errHtml(e) + (e.code==='BATCH_STATUS_HOLD'?'<div class="hint">At least one input is not COMPLETE_PASSED. The CP-7 gate blocks formulation until every input has passed all checkpoints.</div>':'')); }
 });
