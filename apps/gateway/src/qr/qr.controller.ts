@@ -25,7 +25,7 @@ export class QrController {
     const token = decodeURIComponent(serial);
     const host = req.headers['x-forwarded-host'] ?? req.headers.host ?? 'localhost:3001';
     const proto = (req.headers['x-forwarded-proto'] as string) ?? req.protocol ?? 'http';
-    const url = `${proto}://${host}/consumer.html?token=${encodeURIComponent(token)}`;
+    const url = `${proto}://${host}/product.html?token=${encodeURIComponent(token)}`;
     return QRCode.toString(url, {
       type: 'svg',
       errorCorrectionLevel: 'M',

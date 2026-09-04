@@ -105,6 +105,8 @@ export interface Collector {
 export interface BatchRecord {
   epc: string;
   speciesCode: string;
+  /** consumer-facing product name, set on formulation (e.g. "Ashwagandha Root Churna 60g"). */
+  productName?: string;
   status: GacpStatus;
   /** 0–100 GACP score shown to consumers. */
   gacpScore: number;

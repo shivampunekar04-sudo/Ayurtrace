@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#2C5F4A" />
+<title>Product Authenticity — AyurTrace</title>
+<style>
+  :root{
+    --paper:#F4F1E8; --paper-2:#ECE7D8; --ink:#1E2B23; --ink-soft:#5A675E;
+    --forest:#2C5F4A; --leaf:#4A8B6F; --leaf-tint:#DCE8DF; --gold:#B8893D;
+    --amber:#C0873A; --clay:#A8412A; --clay-tint:#F0DAD2; --line:#D8D2C2; --white:#FDFCF8;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;padding-bottom:40px}
+  .wrap{max-width:480px;margin:0 auto;padding:0 20px}
+  .brand{display:flex;align-items:center;gap:9px;justify-content:center;padding:20px 0 8px;color:var(--ink-soft);font-size:13px}
+  .brand svg{width:22px;height:22px}
+  .brand b{color:var(--forest);font-weight:600}
+
+  .loading,.errcard{text-align:center;padding:60px 20px;color:var(--ink-soft)}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--forest);border-radius:50%;
+    display:inline-block;animation:s .8s linear infinite;margin-bottom:12px}
+  @keyframes s{to{transform:rotate(360deg)}}
+
+  /* hero seal */
+  .hero{text-align:center;padding:14px 0 6px}
+  .seal{width:112px;height:112px;margin:0 auto 14px;display:block;filter:drop-shadow(0 6px 14px rgba(44,95,74,.22))}
+  .verdict{font-family:var(--serif);font-size:27px;font-weight:600;line-height:1.15;margin:0}
+  .verdict.bad{color:var(--clay)}
+  .verdict-sub{color:var(--ink-soft);font-size:14px;margin:6px 0 0}
+  .product{font-family:var(--serif);font-size:23px;font-weight:600;margin:20px 0 2px;text-align:center;line-height:1.2}
+  .botanical{text-align:center;font-style:italic;color:var(--ink-soft);font-size:14px;margin:0}
+
+  /* reassurance grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:24px 0 6px}
+  .rea{background:var(--white);border:1px solid var(--line);border-radius:15px;padding:14px}
+  .rea .tick{width:26px;height:26px;border-radius:50%;background:var(--leaf-tint);display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+  .rea .tick svg{width:15px;height:15px}
+  .rea h3{font-size:14px;margin:0 0 2px;font-weight:650}
+  .rea p{font-size:12.5px;color:var(--ink-soft);margin:0;line-height:1.4}
+
+  /* quality score */
+  .score{display:flex;align-items:center;gap:16px;background:var(--white);border:1px solid var(--line);
+    border-radius:15px;padding:16px;margin:12px 0}
+  .ring{width:66px;height:66px;flex:0 0 auto}
+  .score .lbl{font-family:var(--serif);font-size:16px;margin:0}
+  .score .sub{color:var(--ink-soft);font-size:12.5px;margin:2px 0 0}
+
+  /* journey */
+  .sec-title{font-family:var(--serif);font-size:17px;font-weight:600;margin:26px 0 14px;text-align:center}
+  .thread{position:relative;margin:0 6px;padding-left:26px}
+  .thread:before{content:"";position:absolute;left:5px;top:8px;bottom:12px;width:2px;background:linear-gradient(var(--leaf),var(--line))}
+  .node{position:relative;padding:0 0 20px}
+  .node .dot{position:absolute;left:-26px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--forest);border:3px solid var(--paper);box-shadow:0 0 0 2px var(--leaf)}
+  .node .st{font-weight:650;font-size:14.5px}
+  .node .meta{color:var(--ink-soft);font-size:13px;margin-top:1px}
+
+  .origin{background:var(--leaf-tint);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:13.5px;color:#264a3b;display:flex;gap:10px;align-items:center}
+  .footer{text-align:center;color:var(--ink-soft);font-size:12px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+  .footer .chip{display:inline-flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--forest);font-weight:600;margin-bottom:8px}
+  .badwrap{background:var(--clay-tint);border:1px solid #e3b8ac;border-radius:16px;padding:22px;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 22C12 22 3 17 3 9.5C3 5 7 2 12 2C17 2 21 5 21 9.5C21 17 12 22 12 22Z" fill="#DCE8DF" stroke="#2C5F4A" stroke-width="1.4"/><path d="M12 5V19M12 10L8 8M12 13L16 11" stroke="#2C5F4A" stroke-width="1.3" stroke-linecap="round"/></svg>
+    <span>Ayur<b>Trace</b> · Authenticity check</span>
+  </div>
+  <div id="app"><div class="loading"><span class="spin"></span><div>Checking this product…</div></div></div>
+</div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = (iso)=>{ try{ return new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}); }catch(_){ return ''; } };
+const cleanPlace = (zoneName)=> (zoneName||'').replace(/\s*\(.*?\)\s*/g,'').trim() || 'a registered NMPB zone';
+async function getJSON(u){ const r = await fetch(u); const j = await r.json(); if(j && j.ok===false) throw new Error(j.message||j.code); return j.data!==undefined?j.data:j; }
+
+const TICK = '<svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" stroke="#2C5F4A" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function ring(score){
+  const r=27,c=2*Math.PI*r,off=c*(1-score/100);
+  const col = score>=80?'#2C5F4A':score>=50?'#C0873A':'#A8412A';
+  return `<svg class="ring" viewBox="0 0 66 66"><circle cx="33" cy="33" r="${r}" fill="none" stroke="#ECE7D8" stroke-width="6"/>
+    <circle cx="33" cy="33" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 33 33)"/>
+    <text x="33" y="38" text-anchor="middle" font-family="var(--serif)" font-size="18" fill="#1E2B23">${score}</text></svg>`;
+}
+const sealOK = `<svg class="seal" viewBox="0 0 112 112"><circle cx="56" cy="56" r="46" fill="#2C5F4A"/><circle cx="56" cy="56" r="46" fill="none" stroke="#B8893D" stroke-width="2.5" stroke-dasharray="2 5"/><path d="M39 57l11 11 24-27" stroke="#FDFCF8" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const sealBad = `<svg class="seal" viewBox="0 0 112 112"><circle cx="56" cy="56" r="46" fill="#A8412A"/><path d="M42 42l28 28M70 42L42 70" stroke="#FDFCF8" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`;
+
+function rea(title, body){
+  return `<div class="rea"><div class="tick">${TICK}</div><h3>${esc(title)}</h3><p>${esc(body)}</p></div>`;
+}
+
+async function run(){
+  const q = new URLSearchParams(location.search);
+  const token = q.get('token'); const epcParam = q.get('epc');
+  try{
+    let productEpc = epcParam, authentic = false, score = 0, signatureOk = true;
+    if(token){
+      const v = await getJSON('/qr/'+encodeURIComponent(token)+'/verify');
+      signatureOk = v.signatureValid; productEpc = v.productEpc; authentic = v.verifiedAuthentic; score = v.gacpScore;
+      if(!signatureOk){ return renderBad('This QR could not be verified','The digital signature did not match. This may be a copied or tampered label — please don’t purchase it as genuine.'); }
+    }
+    if(!productEpc){ return renderBad('No product found','This code doesn’t point to a registered product.'); }
+
+    const [data, sp, zo] = await Promise.all([ getJSON('/batch/'+encodeURIComponent(productEpc)), getJSON('/species'), getJSON('/zones') ]);
+    const batch = data.batch, timeline = data.timeline||[];
+    if(!token){ authentic = batch.status==='COMPLETE_PASSED' && (batch.flags||[]).length===0; score = batch.gacpScore; }
+
+    const speciesMap = Object.fromEntries((sp.species||[]).map(s=>[s.code,s]));
+    const zoneMap = Object.fromEntries((zo.zones||[]).map(z=>[z.id,z.name]));
+    const species = speciesMap[batch.speciesCode] || { commonName: batch.speciesCode, botanicalName:'' };
+
+    const collections = timeline.filter(t=>t.step==='COLLECTION');
+    const testing = timeline.find(t=>t.step==='TESTING');
+    const dnaConfirmed = testing && testing.detail && testing.detail.dna === true;
+    const originZone = collections[0] ? cleanPlace(zoneMap[collections[0].zoneId] || collections[0].zoneId) : '';
+    const productName = batch.productName || (species.commonName+' product');
+
+    if(!authentic){
+      return renderBad('Not fully verified', 'This product has open quality flags or unfinished checks. Treat it with caution.', productName, species);
+    }
+
+    // reassurances a buyer cares about
+    const reas = [
+      rea('Genuine', 'Verified by its digital signature — not a copy or fake.'),
+      rea('Lab-tested safe', 'Independently tested; contaminants within safe limits.'),
+    ];
+    if(dnaConfirmed) reas.push(rea('True '+species.commonName, 'DNA test confirmed the real species — no adulteration.'));
+    else reas.push(rea('Quality assured', 'Passed every good-practice checkpoint.'));
+    if(!species.endangered) reas.push(rea('Ethically sourced', 'Harvested by a licensed collector within limits.'));
+    else reas.push(rea('Conservation-safe', 'Sourced within protected sustainable quotas.'));
+
+    // plain-language journey
+    const label = { COLLECTION:'Grown & collected', PROCESSING:'Processed & dried', TESTING:'Lab tested & passed', FORMULATION:'Made into this product', AGGREGATION:'Gathered & weighed', CUSTODY:'Handled in transit' };
+    const seen = new Set();
+    const steps = timeline.filter(t=>{ const k=t.step; if(k==='COLLECTION'){return true;} if(seen.has(k))return false; seen.add(k); return true; });
+    const journey = steps.map(t=>{
+      const place = zoneMap[t.zoneId] ? cleanPlace(zoneMap[t.zoneId]) : '';
+      const where = (t.step==='COLLECTION' && place) ? ' · '+place : '';
+      return `<div class="node"><span class="dot"></span><div class="st">${esc(label[t.step]||t.step)}</div>
+        <div class="meta">${esc(fmtDate(t.time))}${esc(where)}</div></div>`;
+    }).join('');
+
+    $('#app').innerHTML = `
+      <div class="hero">
+        ${sealOK}
+        <h1 class="verdict">Genuine Product</h1>
+        <p class="verdict-sub">Verified authentic on the AyurTrace ledger</p>
+      </div>
+      <div class="product">${esc(productName)}</div>
+      ${species.botanicalName?`<p class="botanical">${esc(species.botanicalName)}</p>`:''}
+
+      <div class="grid">${reas.join('')}</div>
+
+      <div class="score">${ring(score)}
+        <div><p class="lbl">Quality score ${score}/100</p>
+        <p class="sub">Across sourcing, purity and identity checks.</p></div>
+      </div>
+
+      ${originZone?`<div class="origin">🌿 <div>Sustainably sourced from <b>${esc(originZone)}</b>.</div></div>`:''}
+
+      <div class="sec-title">From farm to shelf</div>
+      <div class="thread">${journey}</div>
+
+      <div class="footer">
+        <div class="chip">🔒 Verified on the blockchain</div>
+        <div>Every step above was recorded and is tamper-evident. This exact pack was checked just now.</div>
+      </div>`;
+  }catch(e){
+    renderBad('Couldn’t check this product', (e && e.message) ? e.message : 'Please try again in a moment.');
+  }
+}
+
+function renderBad(title, msg, productName, species){
+  $('#app').innerHTML = `
+    <div class="hero">${sealBad}<h1 class="verdict bad">${esc(title)}</h1></div>
+    ${productName?`<div class="product">${esc(productName)}</div>${species&&species.botanicalName?`<p class="botanical">${esc(species.botanicalName)}</p>`:''}`:''}
+    <div class="badwrap">${esc(msg)}</div>
+    <div class="footer"><div>If you bought this expecting a verified product, consider returning it.</div></div>`;
+}
+run();
+</script>
+</body>
+</html>

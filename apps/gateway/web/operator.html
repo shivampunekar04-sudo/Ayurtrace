@@ -277,7 +277,7 @@ AT.$('#form-go').addEventListener('click', async ()=>{
     html += `<div class="qr"><img class="qrimg" src="${qrSrc}" alt="Scan to verify this product" width="200" height="200"/><div style="flex:1;min-width:220px">
       <div class="small muted" style="margin-bottom:6px">Scan this with any phone camera to open the product's provenance. It encodes the manufacturer-signed token, so a copied QR fails verification.</div>
       <div id="scan-hint" class="small"></div>
-      <div style="margin-top:10px"><a class="btn-ghost" href="/consumer.html?token=${encodeURIComponent(first.token)}">Open verification here →</a>
+      <div style="margin-top:10px"><a class="btn-ghost" href="/product.html?token=${encodeURIComponent(first.token)}">Open the consumer page →</a>
       <a class="btn-ghost" href="${qrSrc}" download="ayurtrace-qr.svg">Download QR</a></div>
     </div></div>`;
     banner('form-res', true, html);

@@ -602,6 +602,7 @@ export class AyurLedgerService {
     const batch: BatchRecord = {
       epc: productEpc,
       speciesCode: (await this.getBatchRecord(req.inputEpcs[0]))?.speciesCode ?? 'UNKNOWN',
+      productName: req.productName,
       status: GacpStatus.COMPLETE_PASSED,
       gacpScore: 100,
       checkpoints,
