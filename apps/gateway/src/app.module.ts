@@ -14,6 +14,8 @@ import { RegistryController } from './registry/registry.controller.js';
 import { QrController } from './qr/qr.controller.js';
 import { IpfsController } from './ipfs/ipfs.controller.js';
 import { IpfsService } from './ipfs/ipfs.service.js';
+import { FhirController } from './fhir/fhir.controller.js';
+import { FhirService } from './fhir/fhir.service.js';
 import { AdminController } from './admin.controller.js';
 import { backendKind } from './config/env.js';
 
@@ -30,11 +32,12 @@ const backendProvider: Provider = { provide: LEDGER_BACKEND, useClass: backendCl
 @Module({
   controllers: [
     EventsController, BatchController, ZonesController, RecallController,
-    RegistryController, QrController, IpfsController, AdminController,
+    RegistryController, QrController, IpfsController, FhirController, AdminController,
   ],
   providers: [
     QrService,
     IpfsService,
+    FhirService,
     backendProvider,
     { provide: APP_FILTER, useClass: RejectFilter },
   ],

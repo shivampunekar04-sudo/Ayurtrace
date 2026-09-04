@@ -60,23 +60,22 @@ Both integrations are now fully wired and env-gated. Copy [`.env.example`](.env.
   `npm run sms:test` sends a real SMS. Inbound webhook path documented in CREDENTIALS.md.
 - *(RFC-3161 timestamping already works live against DigiCert's public TSA — no credential needed.)*
 
-## 4. Decisions that are yours to make  *(no code from me needed — just your call)*
+## 4. Decisions — DECIDED (see [docs/DECISIONS.md](docs/DECISIONS.md))
 
-- **Broker adoption lever** — brokers profit from the opaque mixing we remove. Which path: manufacturer
-  procurement mandates, NMPB licensing tie-in, or the collector premium? (See solution doc §8.)
-- **EPCIS-vs-FHIR framing** — the problem statement said "FHIR-style"; we used GS1 EPCIS 2.0 (the actual
-  supply-chain standard). I can add a thin FHIR read-adapter if a judge insists — say the word.
-- **Branding** — real product name/logo/colours if you want to move off the current "AyurTrace" botanical theme.
-- **Tier-4 biometric consent** under the DPDP Act 2023 — a compliance/legal review workstream (not demoed).
+- **Broker adoption** → manufacturer procurement mandate + NMPB licensing tie-in (market access, not goodwill).
+- **EPCIS vs FHIR** → keep GS1 EPCIS 2.0 as source of truth; **built a FHIR R4 read-adapter**
+  (`GET /fhir/Provenance/:epc`, `GET /fhir/metadata`) so the "why not FHIR?" question is answered live.
+- **Branding** → keep "AyurTrace" + botanical/wax-seal identity (renaming would churn the EPC + network ids for no gain).
+- *(Open, not blocking: Tier-4 biometric consent under the DPDP Act 2023 — a compliance/legal review workstream, not demoed.)*
 
 ---
 
 ## TL;DR
 
-| # | Item | Needed for | Blocks demo? |
-|---|------|-----------|--------------|
-| — | (nothing) | the live product demo | **No — it runs now** |
-| 1 | Install Docker Desktop | real Fabric blockchain run | No |
-| 2 | Real NMPB zones/quotas/seasons/ratios | authoritative data | No |
-| 3 | Twilio + IPFS credentials | live SMS + IPFS anchoring | No |
-| 4 | Adoption / FHIR / branding decisions | pitch polish | No |
+| # | Item | Needed for | Status |
+|---|------|-----------|--------|
+| — | (nothing) | the live product demo | **Runs now** |
+| 1 | Install Docker Desktop (clean-AV laptop) | real Fabric blockchain run | Your action — only true gap |
+| 2 | Real NMPB zones/quotas/seasons/ratios | authoritative data | ✅ grounded + sourced; swap when you get official numbers |
+| 3 | Twilio + IPFS credentials | live SMS + IPFS anchoring | ✅ wired — paste tokens in `.env` to go live |
+| 4 | Adoption / FHIR / branding decisions | pitch polish | ✅ decided (FHIR adapter built) |
