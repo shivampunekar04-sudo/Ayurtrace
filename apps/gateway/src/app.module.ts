@@ -15,6 +15,8 @@ import { QrController } from './qr/qr.controller.js';
 import { AdminController } from './admin.controller.js';
 import { SpeciesIdentifyController } from './species/identify.controller.js';
 import { SpeciesIdentifyService } from './species/identify.service.js';
+import { LabReportExtractController } from './lab/extract.controller.js';
+import { LabReportExtractService } from './lab/extract.service.js';
 import { backendKind } from './config/env.js';
 
 function backendClass(): Type<LedgerBackend> {
@@ -31,10 +33,12 @@ const backendProvider: Provider = { provide: LEDGER_BACKEND, useClass: backendCl
   controllers: [
     EventsController, BatchController, ZonesController, RecallController,
     RegistryController, QrController, AdminController, SpeciesIdentifyController,
+    LabReportExtractController,
   ],
   providers: [
     QrService,
     SpeciesIdentifyService,
+    LabReportExtractService,
     backendProvider,
     { provide: APP_FILTER, useClass: RejectFilter },
   ],

@@ -62,6 +62,7 @@
   const PAGES = [
     ['/index.html', 'Overview'],
     ['/collector.html', 'Collector'],
+    ['/lab.html', 'Lab'],
     ['/operator.html', 'Supply chain'],
     ['/regulator.html', 'Regulator'],
     ['/consumer.html', 'Consumer'],
@@ -79,6 +80,17 @@
       <nav class="nav">${links}<span class="status-pill" id="at-status"><span class="dot" id="at-dot"></span><span id="at-status-txt">checking…</span></span></nav>
     </div>`;
     document.body.prepend(bar);
+    // identity chip + sign in/out
+    const id = AT.identity();
+    const nav = bar.querySelector('.nav');
+    if (nav) {
+      const who = AT.el('span', { class: 'role', style: 'background:var(--leaf-tint);color:var(--ink)' },
+        id ? `${AT.esc(id.name || '')} · <b>${AT.esc(id.role)}</b> · <a href="#" id="at-signout" style="color:var(--leaf)">sign out</a>`
+           : `<a href="/login.html" style="color:var(--leaf)">sign in</a>`);
+      nav.appendChild(who);
+      const so = document.getElementById('at-signout');
+      if (so) so.addEventListener('click', (e) => { e.preventDefault(); AT.signOut(); });
+    }
     AT.pollHealth();
   };
 
@@ -108,6 +120,27 @@
     return `<span class="badge ${cls}">${label}</span>`;
   };
   AT.bandColor = { GREEN: 'var(--leaf)', AMBER: 'var(--amber)', RED: 'var(--clay)' };
+
+  // ---- identity / role gate ----------------------------------------------
+  AT.identity = function () {
+    try { return JSON.parse(localStorage.getItem('at_identity') || 'null'); } catch (_) { return null; }
+  };
+  AT.signIn = function (role, name) {
+    try { localStorage.setItem('at_identity', JSON.stringify({ role, name })); } catch (_) {}
+  };
+  AT.signOut = function () {
+    try { localStorage.removeItem('at_identity'); } catch (_) {}
+    location.href = '/login.html';
+  };
+  // Redirect to login if not signed in, or signed in with the wrong role.
+  AT.gate = function (requiredRole) {
+    const id = AT.identity();
+    if (!id) { location.href = '/login.html?next=' + encodeURIComponent(location.pathname); return null; }
+    if (requiredRole && id.role !== requiredRole) {
+      location.href = '/login.html?denied=' + encodeURIComponent(requiredRole); return null;
+    }
+    return id;
+  };
 
   global.AT = AT;
 })(window);
