@@ -100,6 +100,11 @@
           </select>
         </div>
       </div>
+      <div class="field">
+        <label>Lab certificate (optional — pinned to IPFS, CID anchored on-chain)</label>
+        <input id="lab-cert" type="file" accept="application/pdf,image/*" />
+        <div class="small muted" id="ipfs-note" style="margin-top:5px"></div>
+      </div>
       <button class="btn" id="lab-go">Submit quality test</button>
       <div id="lab-res"></div>
     </div>
@@ -130,6 +135,15 @@
 <script>
 AT.chrome('Supply chain · operators', '/operator.html');
 let BATCHES=[], ZONES=[];
+
+function fileToB64(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(String(r.result).split(',')[1] || '');
+    r.onerror = ()=> reject(new Error('file read failed'));
+    r.readAsDataURL(file);
+  });
+}
 
 async function refresh(){
   try{
@@ -205,11 +219,25 @@ AT.$('#merge-go').addEventListener('click', async ()=>{
 AT.$('#lab-go').addEventListener('click', async ()=>{
   const [vMsp, vRole] = AT.$('#lab-ver').value.split('|');
   const lead=Number(AT.$('#lab-lead').value), moist=Number(AT.$('#lab-moist').value);
+  const note = AT.$('#ipfs-note');
+  let ipfsCID = 'Qm'+Math.random().toString(36).slice(2,12); // placeholder when no cert uploaded
+  const file = AT.$('#lab-cert').files && AT.$('#lab-cert').files[0];
+  if(file){
+    note.innerHTML = '<span class="spinner"></span> Pinning certificate to IPFS…';
+    try{
+      const b64 = await fileToB64(file);
+      const pin = await AT.post('/ipfs/pin', { contentBase64:b64, filename:file.name, contentType:file.type||'application/octet-stream' });
+      ipfsCID = pin.cid;
+      note.innerHTML = pin.live
+        ? `✓ pinned to IPFS (${AT.esc(pin.provider)}): <a class="mono" href="${AT.esc(pin.url)}" target="_blank" rel="noopener">${AT.esc(pin.cid)}</a>`
+        : `⚠ No IPFS token set — using a deterministic mock CID <span class="mono">${AT.esc(pin.cid)}</span>. Set PINATA_JWT in apps/gateway/.env to make this a real, resolvable link.`;
+    }catch(e){ note.textContent = 'IPFS pin failed: '+(e.message||e.code); }
+  }
   const body = { epc: AT.$('#lab-batch').value,
     metrics:[ {name:'lead',value:lead,unit:'ppm',limit:10,withinLimit:lead<=10},
               {name:'moisture',value:moist,unit:'%',limit:12,withinLimit:moist<=12} ],
     dna:{ declaredSpecies:AT.$('#lab-dna-d').value, confirmedSpecies:AT.$('#lab-dna-c').value },
-    ipfsCID:'Qm'+Math.random().toString(36).slice(2,12),
+    ipfsCID,
     testingLabMsp:AT.$('#lab-lab').value, verifierMsp:vMsp, verifierRole:vRole };
   try{
     const d = await AT.post('/events/quality-test', body);

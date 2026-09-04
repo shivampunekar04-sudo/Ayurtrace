@@ -46,12 +46,18 @@ whatever of these you can get (even one improves credibility):
 
 Drop them in `seed/src/index.ts` — send me the numbers and I'll wire them in.
 
-## 3. Credentials, only if you want the DESIGNED integrations live  *(optional)*
+## 3. Credentials — wiring is DONE; just paste tokens  *(optional)*
 
-These are fully coded in `complete-b/` and tested against mocks; they go live the moment you supply:
+Both integrations are now fully wired and env-gated. Copy [`.env.example`](.env.example) to
+`.env`, paste tokens, and the mock paths flip to real — no code change. Full steps in
+[docs/CREDENTIALS.md](docs/CREDENTIALS.md).
 
-- **Twilio** account SID + auth token + a phone number → real Tier-3 SMS collection + PoLK fan-out.
-- **IPFS pinning** (e.g. web3.storage/Pinata token) → real certificate anchoring with the CID on-chain.
+- **IPFS** — set `PINATA_JWT` (from pinata.cloud) in `apps/gateway/.env`. The gateway's
+  `POST /ipfs/pin` + the operator dashboard's lab-certificate upload then produce a **real,
+  resolvable CID** anchored on-chain (the consumer app's cert link becomes live). Verify at
+  `GET /ipfs/status`. Without a token it returns a deterministic mock CID.
+- **Twilio** — set `TWILIO_ACCOUNT_SID/AUTH_TOKEN/FROM_NUMBER` in `complete-b/.env`, then
+  `npm run sms:test` sends a real SMS. Inbound webhook path documented in CREDENTIALS.md.
 - *(RFC-3161 timestamping already works live against DigiCert's public TSA — no credential needed.)*
 
 ## 4. Decisions that are yours to make  *(no code from me needed — just your call)*

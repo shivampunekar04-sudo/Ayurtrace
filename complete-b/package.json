@@ -17,7 +17,9 @@
     "predemo": "tsc",
     "demo": "node scripts/demo.mjs",
     "pretsa:live": "tsc",
-    "tsa:live": "node scripts/tsa-live.mjs"
+    "tsa:live": "node scripts/tsa-live.mjs",
+    "presms:test": "tsc",
+    "sms:test": "node scripts/sms-test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",

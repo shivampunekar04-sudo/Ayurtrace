@@ -1,3 +1,4 @@
+import './env-preload.js'; // must be first: loads .env before any module reads process.env
 import 'reflect-metadata';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -11,6 +12,8 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['log', 'warn', 'error'],
   });
+  // certificates arrive base64-encoded for IPFS pinning — lift the default 100kb JSON cap
+  app.useBodyParser('json', { limit: '20mb' });
   app.enableCors({ origin: true, methods: ['GET', 'POST'] });
   app.useGlobalPipes(
     new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }),
