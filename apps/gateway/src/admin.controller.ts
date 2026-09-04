@@ -1,13 +1,19 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Inject, Post } from '@nestjs/common';
 import { QrService } from './qr/qr.service.js';
-import { DemoLedgerBackend } from './ledger/demo.backend.js';
+import { LEDGER_BACKEND, type LedgerBackend } from './ledger/ledger.backend.js';
 import { backendKind } from './config/env.js';
+
+/** A backend that can be re-seeded exposes reset(); demo + live do, fabric does not. */
+interface Resettable { reset(): Promise<void>; }
+function isResettable(b: unknown): b is Resettable {
+  return typeof (b as Resettable).reset === 'function';
+}
 
 @Controller()
 export class AdminController {
   constructor(
     private readonly qr: QrService,
-    private readonly demo: DemoLedgerBackend,
+    @Inject(LEDGER_BACKEND) private readonly ledger: LedgerBackend,
   ) {}
 
   @Get('health')
@@ -21,10 +27,11 @@ export class AdminController {
     return { ok: true, data: { publicKey: this.qr.pubHex, algorithm: 'ed25519' } };
   }
 
-  /** Deterministic re-seed for the demo backend — the `reset-demo` HTTP hook. */
+  /** Deterministic re-seed for the active backend — the `reset-demo` hook. */
   @Post('admin/reset-demo')
   async reset() {
-    if (backendKind() === 'demo') await this.demo.reset();
-    return { ok: true, data: { reset: backendKind() === 'demo' } };
+    const can = isResettable(this.ledger);
+    if (can) await this.ledger.reset();
+    return { ok: true, data: { reset: can, backend: backendKind() } };
   }
 }

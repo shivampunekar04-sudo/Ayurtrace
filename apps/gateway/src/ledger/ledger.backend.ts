@@ -17,7 +17,11 @@ import type {
   ZonesResponse,
   ZoneQuotaResponse,
   RecallResponse,
+  BatchRecord,
+  SpeciesRule,
+  Collector,
 } from '@ayurtrace/contracts';
+import type { LedgerStats } from 'ayurledger/service';
 
 export const LEDGER_BACKEND = Symbol('LEDGER_BACKEND');
 
@@ -31,4 +35,8 @@ export interface LedgerBackend {
   listZones(): Promise<ZonesResponse>;
   zoneQuota(zoneId: string): Promise<ZoneQuotaResponse>;
   recall(epc: string): Promise<RecallResponse>;
+  listBatches(): Promise<{ batches: BatchRecord[] }>;
+  listSpecies(): Promise<{ species: SpeciesRule[] }>;
+  listCollectors(): Promise<{ collectors: Collector[] }>;
+  stats(): Promise<LedgerStats>;
 }

@@ -49,6 +49,17 @@ import {
 } from './mpr.js';
 import type { LedgerPort } from './ledger.js';
 
+/** Fleet-wide headline numbers surfaced to the landing page + regulator dashboard. */
+export interface LedgerStats {
+  totalBatches: number;
+  passedProducts: number;
+  flagged: number;
+  onHold: number;
+  zones: number;
+  quota: { green: number; amber: number; red: number };
+  endangeredAlerts: number;
+}
+
 /** Typed error carrying a frozen §6.2 reject code; Fabric rolls back on throw. */
 export class LedgerReject extends Error {
   constructor(
@@ -137,10 +148,83 @@ export class AyurLedgerService {
     quotas: Quota[];
   }): Promise<void> {
     for (const s of refs.species) await this.ledger.putState(`species/${s.code}`, JSON.stringify(s));
+    await this.ledger.putState('species-index', JSON.stringify(refs.species.map((s) => s.code)));
     for (const z of refs.zones) await this.ledger.putState(`zone/${z.id}`, JSON.stringify(z));
     await this.ledger.putState('zone-index', JSON.stringify(refs.zones.map((z) => z.id)));
     for (const c of refs.collectors) await this.ledger.putState(`collector/${c.id}`, JSON.stringify(c));
+    await this.ledger.putState('collector-index', JSON.stringify(refs.collectors.map((c) => c.id)));
     for (const q of refs.quotas) await this.saveQuota(q);
+  }
+
+  // ---- reads: registry + fleet-wide views (dashboards) --------------------
+  /** Every batch/lot/product record, newest first — powers the regulator table. */
+  async listBatches(): Promise<{ batches: BatchRecord[] }> {
+    const batches = await this.allBatchEpcs();
+    batches.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    return { batches };
+  }
+
+  /** Registered species rules — feeds the collector form's species/part/season picker. */
+  async listSpecies(): Promise<{ species: SpeciesRule[] }> {
+    const idxRaw = await this.ledger.getState('species-index');
+    const codes: string[] = idxRaw ? JSON.parse(idxRaw) : [];
+    const species: SpeciesRule[] = [];
+    for (const c of codes) {
+      const r = await this.ledger.getState(`species/${c}`);
+      if (r) species.push(JSON.parse(r));
+    }
+    return { species };
+  }
+
+  /** Registered collectors — feeds the collector-id picker (incl. the expired one). */
+  async listCollectors(): Promise<{ collectors: Collector[] }> {
+    const idxRaw = await this.ledger.getState('collector-index');
+    const ids: string[] = idxRaw ? JSON.parse(idxRaw) : [];
+    const collectors: Collector[] = [];
+    for (const id of ids) {
+      const r = await this.ledger.getState(`collector/${id}`);
+      if (r) collectors.push(JSON.parse(r));
+    }
+    return { collectors };
+  }
+
+  /** Fleet-wide headline numbers for the landing page + regulator dashboard. */
+  async stats(): Promise<LedgerStats> {
+    const batches = await this.allBatchEpcs();
+    const zones = await this.allZones();
+    const quotaKvs = await this.ledger.getByPartialCompositeKey(KEY.quota, []);
+    const quota = { green: 0, amber: 0, red: 0 };
+    let endangeredAlerts = 0;
+    const speciesIdxRaw = await this.ledger.getState('species-index');
+    const endangeredCodes = new Set<string>();
+    if (speciesIdxRaw) {
+      for (const c of JSON.parse(speciesIdxRaw) as string[]) {
+        const r = await this.ledger.getState(`species/${c}`);
+        if (r && (JSON.parse(r) as SpeciesRule).endangered) endangeredCodes.add(c);
+      }
+    }
+    for (const kv of quotaKvs) {
+      const q = JSON.parse(kv.value) as Quota;
+      const pct = q.annualLimitKg === 0 ? 0 : (q.consumedKg / q.annualLimitKg) * 100;
+      if (pct > 80) quota.red += 1;
+      else if (pct >= 50) quota.amber += 1;
+      else quota.green += 1;
+      if (endangeredCodes.has(q.speciesCode) && pct >= 80) endangeredAlerts += 1;
+    }
+    const passedProducts = batches.filter(
+      (b) => b.epc.includes('output:FORMULATION-') && b.status === GacpStatus.COMPLETE_PASSED,
+    ).length;
+    const flagged = batches.filter((b) => b.flags.length > 0).length;
+    const onHold = batches.filter((b) => b.status === GacpStatus.HOLD).length;
+    return {
+      totalBatches: batches.length,
+      passedProducts,
+      flagged,
+      onHold,
+      zones: zones.length,
+      quota,
+      endangeredAlerts,
+    };
   }
 
   // ---- write: collection (MPR 5-check) ------------------------------------

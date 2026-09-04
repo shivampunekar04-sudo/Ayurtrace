@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1E2B23" />
+<title>AyurTrace — Verify</title>
+<link rel="stylesheet" href="/assets/theme.css" />
+<style>
+  .verdict{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin:20px 0}
+  .seal{width:96px;height:96px;flex:0 0 auto}
+  .verdict h1{font-family:var(--serif);font-size:24px;margin:0 0 3px;line-height:1.15}
+  .verdict.fail h1{color:var(--clay)} .verdict .who{color:var(--ink-soft);font-size:13px}
+  .verdict .epc{font-family:var(--mono);font-size:11px;color:var(--ink-soft);word-break:break-all;margin-top:6px}
+  .scoreband{display:flex;align-items:center;gap:16px;margin:14px 0}
+  .ring{width:74px;height:74px;flex:0 0 auto}
+  .thread{position:relative;margin-left:7px;padding-left:24px}
+  .thread:before{content:"";position:absolute;left:0;top:6px;bottom:10px;width:2px;background:linear-gradient(var(--leaf),var(--line))}
+  .node{position:relative;padding:0 0 20px}
+  .node:before{content:"";position:absolute;left:-24px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--forest);border:2px solid var(--forest)}
+  .node .step{font-weight:600;font-size:14.5px}
+  .node .meta{color:var(--ink-soft);font-size:12.5px;margin-top:1px}
+  .node .kv{margin-top:6px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:5px 12px}
+  .farm{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:9px}
+  .farm .id{font-family:var(--mono);font-size:12px} .farm .z{color:var(--ink-soft);font-size:12px;margin-left:auto}
+  .sec{margin-top:26px} .sec h3{font-family:var(--serif);font-weight:600;font-size:16px;margin:0 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap narrow">
+  <div class="card">
+    <h3>Verify a product</h3>
+    <div class="lede">Scan the QR on the pack, or paste its token / a lot EPC. Verification is cryptographic — a copied or edited QR fails.</div>
+    <div style="display:flex;gap:8px">
+      <input id="q" class="mono" placeholder="paste QR token or urn:ayurtrace:… EPC" />
+      <button class="btn" id="go">Verify</button>
+    </div>
+  </div>
+  <div id="out"></div>
+</div>
+<footer class="foot">Consumers see zone-level provenance only. Precise coordinates of endangered wild
+  collection sites are regulator-only, by design — publishing them would be a poaching vector.</footer>
+
+<script src="/assets/app.js"></script>
+<script>
+AT.chrome('Consumer · public', '/consumer.html');
+
+const sealOK = `<svg class="seal" viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="#2C5F4A"/><circle cx="48" cy="48" r="40" fill="none" stroke="#B8893D" stroke-width="2" stroke-dasharray="3 4"/><path d="M34 49l9 9 20-22" stroke="#FBFAF5" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const sealBad = `<svg class="seal" viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="#A8412A"/><path d="M36 36l24 24M60 36L36 60" stroke="#FBFAF5" stroke-width="4.5" fill="none" stroke-linecap="round"/></svg>`;
+function ring(score){
+  const r=30,c=2*Math.PI*r,off=c*(1-score/100);
+  const col = score>=80?'#2C5F4A':score>=50?'#C0873A':'#A8412A';
+  return `<svg class="ring" viewBox="0 0 74 74"><circle cx="37" cy="37" r="${r}" fill="none" stroke="#ECE7D8" stroke-width="7"/>
+    <circle cx="37" cy="37" r="${r}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 37 37)"/>
+    <text x="37" y="42" text-anchor="middle" font-family="var(--serif)" font-size="19" fill="#1E2B23">${score}</text></svg>`;
+}
+
+async function verify(){
+  const val = AT.$('#q').value.trim(); const out=AT.$('#out'); if(!val) return;
+  out.innerHTML = `<div class="card" style="margin-top:16px"><span class="spinner"></span> Checking the ledger…</div>`;
+  try{
+    let productEpc=val, verify=null;
+    if(val.includes('.') && !val.startsWith('urn:')){ // looks like a signed QR token
+      verify = await AT.get('/qr/'+encodeURIComponent(val)+'/verify');
+      productEpc = verify.productEpc;
+      if(!verify.signatureValid){
+        out.innerHTML = `<div class="verdict fail"><div>${sealBad}</div><div><h1>Not authentic</h1>
+          <div class="who">This QR failed manufacturer signature verification — it is a copy or has been altered.</div></div></div>`;
+        return;
+      }
+    }
+    const data = await AT.get('/batch/'+encodeURIComponent(productEpc));
+    render(data, verify);
+  }catch(e){
+    out.innerHTML = `<div class="banner err" style="margin-top:16px"><div class="code">${AT.esc(e.code)}</div><div>${AT.esc(e.message)}</div></div>`;
+  }
+}
+
+function render(data, verify){
+  const b = data.batch, tl = data.timeline||[];
+  const authentic = verify ? verify.verifiedAuthentic : (b.status==='COMPLETE_PASSED' && (b.flags||[]).length===0);
+  const score = verify ? verify.gacpScore : b.gacpScore;
+  const farms = tl.filter(s=>s.step==='COLLECTION');
+  const lab = tl.find(s=>s.step==='TESTING');
+  const out = AT.$('#out');
+  let html = `<div class="verdict ${authentic?'':'fail'}"><div>${authentic?sealOK:sealBad}</div>
+    <div><h1>${authentic?'Verified Authentic':'Not fully verified'}</h1>
+      <div class="who">${authentic?'Passed every GACP checkpoint with no flags.':'This batch has open flags or unfinished checkpoints — treat with caution.'}</div>
+      <div class="epc">${AT.esc(AT.shortEpc(b.epc))}</div></div></div>`;
+
+  html += `<div class="card"><div class="scoreband">${ring(score)}<div>
+      <div style="font-family:var(--serif);font-size:15px">GACP compliance score</div>
+      <div class="small muted">Deterministic 0–100 from checkpoints, PoLK corroboration and flags.
+      Status: ${AT.statusBadge(b.status)}</div></div></div></div>`;
+
+  html += `<div class="sec"><h3>Provenance</h3><div class="thread">` + (tl.length?tl.map(s=>{
+    const d=s.detail||{};
+    let kv='';
+    if(s.step==='COLLECTION') kv=`<span class="chip mono">${AT.esc(d.collector||'collector')}</span><span class="chip">PoLK ${AT.esc(d.polk||'—')}</span>`;
+    if(s.step==='TESTING') kv=`<span class="chip">${AT.esc(d.result||'')}</span>${d.dna?'<span class="chip dna">DNA match</span>':''}${d.ipfsCID?`<span class="chip mono">cert ${AT.esc(String(d.ipfsCID).slice(0,10))}…</span>`:''}`;
+    if(s.step==='PROCESSING'&&d.massBalance) kv=`<span class="chip">mass-balance ${AT.esc(d.massBalance.result||'PASSED')}</span>`;
+    return `<div class="node"><div class="step">${AT.esc(s.label)}</div>
+      <div class="meta">${AT.esc(AT.time(s.time))} · zone ${AT.esc((s.zoneId||'').replace('NMPB-KA-',''))}</div>
+      ${kv?`<div class="kv">${kv}</div>`:''}</div>`;
+  }).join(''):'<div class="muted small">No events recorded.</div>') + `</div></div>`;
+
+  if(farms.length){
+    html += `<div class="sec"><h3>Source farms (${farms.length})</h3>` + farms.map(f=>{
+      const d=f.detail||{};
+      return `<div class="farm"><span>🌿</span><span class="id">${AT.esc(d.collector||'collector')}</span><span class="z">zone ${AT.esc((f.zoneId||'').replace('NMPB-KA-',''))}</span></div>`;
+    }).join('') + `<div class="small muted">Locations shown at zone level only.</div></div>`;
+  }
+  if(lab){
+    const d=lab.detail||{};
+    html += `<div class="sec"><h3>Laboratory</h3><div class="card">
+      <div>Result: <b>${AT.esc(d.result||'—')}</b>${d.dna?' · species DNA confirmed (ITS2 + psbA-trnH)':''}</div>
+      ${d.ipfsCID?`<div class="small muted" style="margin-top:6px">Certificate anchored on IPFS · <span class="mono">${AT.esc(d.ipfsCID)}</span></div>`:''}</div></div>`;
+  }
+  html += `<div class="sec"><button class="btn-ghost" style="width:100%" onclick="alert('A ConsumerFlag would be written on-chain for NMPB review. (Report path is DESIGNED.)')">⚑ Report a problem with this product</button></div>`;
+  out.innerHTML = html;
+}
+
+AT.$('#go').addEventListener('click', verify);
+AT.$('#q').addEventListener('keydown', e=>{ if(e.key==='Enter') verify(); });
+// deep-link from operator/collector apps
+const u = new URLSearchParams(location.search);
+if(u.get('token')){ AT.$('#q').value=u.get('token'); verify(); }
+else if(u.get('epc')){ AT.$('#q').value=u.get('epc'); verify(); }
+</script>
+</body>
+</html>

@@ -146,4 +146,28 @@ export class AyurLedgerContract extends Contract {
   async Recall(ctx: Context, epc: string): Promise<string> {
     return guard(() => this.svc(ctx).recall(epc));
   }
+
+  @Transaction(false)
+  @Returns('string')
+  async ListBatches(ctx: Context): Promise<string> {
+    return guard(() => this.svc(ctx).listBatches());
+  }
+
+  @Transaction(false)
+  @Returns('string')
+  async ListSpecies(ctx: Context): Promise<string> {
+    return guard(() => this.svc(ctx).listSpecies());
+  }
+
+  @Transaction(false)
+  @Returns('string')
+  async ListCollectors(ctx: Context): Promise<string> {
+    return guard(() => this.svc(ctx).listCollectors());
+  }
+
+  @Transaction(false)
+  @Returns('string')
+  async Stats(ctx: Context): Promise<string> {
+    return guard(() => this.svc(ctx).stats());
+  }
 }

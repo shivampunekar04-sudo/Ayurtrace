@@ -1,11 +1,24 @@
 /**
- * Environment configuration. LEDGER_BACKEND=demo (default) runs fully local;
- * LEDGER_BACKEND=fabric connects to the peer using the enrollment material paths.
+ * Environment configuration.
+ *   LEDGER_BACKEND=demo  (default) — in-memory, deterministic clock, resets on
+ *                        restart. Used by the golden-path test.
+ *   LEDGER_BACKEND=live  — same enforcement code over a durable file-backed
+ *                        ledger with a real wall-clock. This is the product
+ *                        demo: data judges enter persists across restarts.
+ *   LEDGER_BACKEND=fabric — connects to the peer using the enrollment material.
  */
-export type BackendKind = 'demo' | 'fabric';
+export type BackendKind = 'demo' | 'live' | 'fabric';
 
 export function backendKind(): BackendKind {
-  return process.env.LEDGER_BACKEND === 'fabric' ? 'fabric' : 'demo';
+  const v = process.env.LEDGER_BACKEND;
+  if (v === 'fabric') return 'fabric';
+  if (v === 'live') return 'live';
+  return 'demo';
+}
+
+/** Where the `live` backend persists ledger state (durable across restarts). */
+export function dataFile(): string {
+  return process.env.LEDGER_DATA_FILE ?? 'data/ledger.json';
 }
 
 export interface FabricConfig {

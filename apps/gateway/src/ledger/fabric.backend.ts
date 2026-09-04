@@ -9,7 +9,11 @@
  * a running network (Phase 0 / M0) to execute — the demo backend covers local runs.
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { connect, Gateway, Contract, signers } from '@hyperledger/fabric-gateway';
+// Runtime values (`connect`, `signers`) are loaded lazily inside client() via a
+// dynamic import so that merely importing this class in demo mode does NOT pull
+// in @hyperledger/fabric-gateway (a CJS package whose transitive ESM deps break
+// require() under Node's ESM loader). Types are erased at compile time.
+import type { Gateway, Contract } from '@hyperledger/fabric-gateway';
 import * as grpc from '@grpc/grpc-js';
 import { promises as fs } from 'node:fs';
 import * as crypto from 'node:crypto';
@@ -18,7 +22,9 @@ import type {
   CollectionRequest, CollectionResponse, AggregationRequest, TransformationRequest,
   TransformationResponse, QualityTestRequest, FormulationRequest, FormulationResponse,
   BatchTimelineResponse, ZonesResponse, ZoneQuotaResponse, RecallResponse,
+  BatchRecord, SpeciesRule, Collector,
 } from '@ayurtrace/contracts';
+import type { LedgerStats } from 'ayurledger/service';
 import type { LedgerBackend } from './ledger.backend.js';
 import { LedgerReject } from '../common/reject.js';
 import { fabricConfig } from '../config/env.js';
@@ -34,6 +40,7 @@ export class FabricLedgerBackend implements LedgerBackend {
 
   private async client(): Promise<Contract> {
     if (this.contract) return this.contract;
+    const { connect, signers } = await import('@hyperledger/fabric-gateway');
     const cfg = fabricConfig();
     const tlsRootCert = await fs.readFile(cfg.tlsCertPath);
     const credentials = grpc.credentials.createSsl(tlsRootCert);
@@ -111,6 +118,10 @@ export class FabricLedgerBackend implements LedgerBackend {
   listZones() { return this.evaluate<ZonesResponse>('ListZones'); }
   zoneQuota(zoneId: string) { return this.evaluate<ZoneQuotaResponse>('ZoneQuota', zoneId); }
   recall(epc: string) { return this.evaluate<RecallResponse>('Recall', epc); }
+  listBatches() { return this.evaluate<{ batches: BatchRecord[] }>('ListBatches'); }
+  listSpecies() { return this.evaluate<{ species: SpeciesRule[] }>('ListSpecies'); }
+  listCollectors() { return this.evaluate<{ collectors: Collector[] }>('ListCollectors'); }
+  stats() { return this.evaluate<LedgerStats>('Stats'); }
 
   async onModuleDestroy(): Promise<void> {
     this.gateway?.close();

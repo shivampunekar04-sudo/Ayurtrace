@@ -37,8 +37,11 @@ ever disagree, the docs win and the code is the bug.
 | Fabric `Contract` adapter (`ChaincodeStub`→`LedgerPort`) | 🟢 BUILT | type-checks vs real `fabric-contract-api` 2.5 |
 | In-memory `MemoryLedger` (dev/demo adapter) | 🟢 BUILT | powers tests + demo gateway |
 | NestJS gateway (§6.4 endpoints, class-validator, typed reject filter, ed25519 QR) | 🟢 BUILT | **14/14** HTTP checks (`apps/gateway/golden-path.mjs`) |
+| Registry read endpoints (`/batches /species /collectors /stats`) | 🟢 BUILT | power the dashboards; parity method on contract + all 3 backends |
+| **Live backend** (`LEDGER_BACKEND=live`) — durable file ledger + real clock | 🟢 BUILT | `FileLedger` + `LiveLedgerBackend`; seeds on empty, persists per write, rolls back rejects |
+| **Served dashboards** (`apps/gateway/web`) — collector/operator/regulator/consumer + overview | 🟢 BUILT | same-origin, live-only, no fake fallback; verified in-browser end to end |
 | Seed data (5 species, 3 zones, 4 collectors, quotas) | 🟢 BUILT | deterministic; drives tests + UIs |
-| Consumer PWA / Collector PWA / Regulator dashboard | 🟢 BUILT (as self-contained HTML) | live vs gateway; real-data offline fallback |
+| Original self-contained HTML prototypes (consumer/collector/regulator) | 🟢 BUILT | design reference; superseded by the served dashboards |
 | Tier-2 offline sync | 🟡 SIMULATED | queue UI real; sync via signal toggle |
 | IoT weighbridge (CP-3), PoLK, species photo-check | 🟡 SIMULATED | interface real, backend mocked |
 | **Live 3-org Fabric network** | 🔵 **DESIGNED** | adapter written + type-checks; needs Docker + `fabric-samples` (never run against a peer) |

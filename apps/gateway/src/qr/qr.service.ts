@@ -5,8 +5,15 @@
  * The manufacturer key is held server-side (execution plan §Identity).
  */
 import { Injectable } from '@nestjs/common';
+import { webcrypto } from 'node:crypto';
 import * as ed from '@noble/ed25519';
 import { sha512 } from '@noble/hashes/sha512';
+
+// @noble/ed25519 v2 reads the global Web Crypto for randomBytes. Node 20+ exposes
+// `globalThis.crypto` by default; Node 18 does not, so polyfill it from node:crypto.
+if (!(globalThis as { crypto?: unknown }).crypto) {
+  (globalThis as { crypto?: unknown }).crypto = webcrypto;
+}
 
 // @noble/ed25519 v2 requires a SHA-512 implementation to be wired in.
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));

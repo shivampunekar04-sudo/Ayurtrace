@@ -32,8 +32,12 @@ stubs/entrypoints awaiting a live environment.
 | `src/app.module.ts` | selects demo/fabric backend from `LEDGER_BACKEND`; wires controllers + filter | 🟢 |
 | `src/config/env.ts` | backend kind + Fabric enrollment env config | 🟢 |
 | `src/ledger/ledger.backend.ts` | `LedgerBackend` port + DI token | 🟢 |
-| `src/ledger/demo.backend.ts` | runs real `AyurLedgerService` in-memory (no Docker) | 🟢 |
-| `src/ledger/fabric.backend.ts` | production path via `@hyperledger/fabric-gateway` | 🟢 typecheck / 🔵 needs peer |
+| `src/ledger/demo.backend.ts` | runs real `AyurLedgerService` in-memory, deterministic clock (tests) | 🟢 |
+| `src/ledger/live.backend.ts` | product demo: real service over durable `FileLedger`, real clock, seed-on-empty | 🟢 |
+| `src/ledger/file-ledger.ts` | persistent `LedgerPort` — atomic JSON snapshot, reload-on-reject | 🟢 |
+| `src/registry/registry.controller.ts` | `GET /batches /species /collectors /stats` (dashboard reads) | 🟢 |
+| `src/ledger/fabric.backend.ts` | production path via `@hyperledger/fabric-gateway` (lazy-loaded) | 🟢 typecheck / 🔵 needs peer |
+| `start-live.mjs` | cross-platform launcher — `npm run start:live` (sets `LEDGER_BACKEND=live`) | 🟢 |
 | `src/common/reject.ts` | gateway `LedgerReject` + duck-typed guard | 🟢 |
 | `src/common/reject.filter.ts` | maps any reject → frozen `{ok:false,code,…}` (422) | 🟢 |
 | `src/events/dto.ts` | class-validator DTOs = §6.1 edge validation | 🟢 |
@@ -46,7 +50,18 @@ stubs/entrypoints awaiting a live environment.
 | `src/admin.controller.ts` | `/health`, `/qr/pubkey`, `POST /admin/reset-demo` | 🟢 |
 | `golden-path.mjs` | in-process 14-check §9.1 e2e (boots Nest on ephemeral port) | 🟢 |
 
-## apps/*-pwa, apps/regulator — UIs (🟢 BUILT, self-contained HTML)
+## apps/gateway/web — the live product dashboards (🟢 BUILT, served at `/`, same-origin, no mock)
+| File | Purpose |
+|---|---|
+| `assets/theme.css` | shared design system (botanical green, serif display, wax-seal motif) |
+| `assets/app.js` | same-origin API client (surfaces frozen reject codes), shared nav, health poll |
+| `index.html` | live overview — stats from `/stats`, role links, honesty legend |
+| `collector.html` | Tier-1 field entry → `POST /events/collection`; live quota, zone-centroid GPS, real MPR pass/reject |
+| `operator.html` | aggregate · mass-balance merge · dual-endorsed lab test · formulate + signed QR (with QR image) |
+| `regulator.html` | live SVG zone-quota map, over-harvest alerts, zone compliance, batch audit, one-click recall |
+| `consumer.html` | QR/EPC verify → wax-seal verdict, GACP ring, provenance timeline, source farms (mobile-first) |
+
+## apps/*-pwa, apps/regulator — original prototypes (🟢 BUILT, self-contained HTML, design reference)
 | File | Purpose | Notes |
 |---|---|---|
 | `apps/consumer-pwa/index.html` | QR verify, GACP ring, provenance thread, source-farm traceback, quota bar, report | flagship; real captured demo fallback |

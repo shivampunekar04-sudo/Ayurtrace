@@ -48,4 +48,8 @@ export class DemoLedgerBackend implements LedgerBackend {
   listZones() { return this.guard(() => this.svc.listZones()); }
   zoneQuota(zoneId: string) { return this.guard(() => this.svc.zoneQuota(zoneId)); }
   recall(epc: string) { return this.guard(() => this.svc.recall(epc)); }
+  listBatches() { return this.guard(() => this.svc.listBatches()); }
+  listSpecies() { return this.guard(() => this.svc.listSpecies()); }
+  listCollectors() { return this.guard(() => this.svc.listCollectors()); }
+  stats() { return this.guard(() => this.svc.stats()); }
 }

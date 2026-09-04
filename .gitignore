@@ -15,6 +15,9 @@ build/
 *.log
 npm-debug.log*
 
+# Live-ledger persisted state (regenerated on first boot)
+apps/gateway/data/
+
 # OS / editor
 .DS_Store
 Thumbs.db

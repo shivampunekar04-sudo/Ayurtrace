@@ -27,7 +27,8 @@ Every capability is tagged. Nothing designed is presented as working software.
 | GACP score 0–100 + recall traversal (merge → source farms) | 🟢 **BUILT** | tested |
 | Fabric `Contract` adapter (`ChaincodeStub` → `LedgerPort`) | 🟢 **BUILT** | type-checks against `fabric-contract-api` 2.5 |
 | NestJS gateway (§6.4 endpoints, validation, typed rejects, ed25519 QR) | 🟢 **BUILT** | 14/14 HTTP checks pass end-to-end |
-| Collector PWA · Consumer PWA · Regulator dashboard | 🟢 **BUILT** | live against gateway; bundled real-data fallback |
+| **Live product** — durable file-backed ledger + 5 dashboards served from the gateway | 🟢 **BUILT** | one URL, real wall-clock, data persists across restarts; no mock, no fake fallback |
+| Collector · Supply-chain · Regulator · Consumer dashboards (served at `/`) | 🟢 **BUILT** | every value computed live by the server from ledger state |
 | Tier-2 offline queue | 🟡 **SIMULATED** | queue UI real; sync shown via a signal toggle |
 | IoT weighbridge (CP-3), PoLK peer confirm, species photo-check | 🟡 **SIMULATED** | real interface, mocked backend |
 | Live 3-org Fabric network run | 🔵 **DESIGNED** | `FabricLedgerBackend` written; needs `fabric-samples` + Docker (see `infra/`) |
@@ -69,36 +70,43 @@ one env var — controllers, UIs, and contracts never change.
 
 ---
 
-## Run it
+## Run it — the live product (one URL)
 
-Prerequisites: Node 20+ and npm.
+Prerequisites: Node 18+ and npm. No Docker needed.
 
 ```bash
-# 1. contracts + seed + chaincode
+# build the shared packages once
 (cd packages/contracts && npm install && npm run build)
 (cd seed && npm install && npm run build)
-(cd chaincode/ayurledger && npm install && npm test)     # → 45/45 pass
+(cd chaincode/ayurledger && npm install && npm run build)
 
-# 2. gateway (demo backend — no Docker needed)
-(cd apps/gateway && npm install && npm run build)
-(cd apps/gateway && LEDGER_BACKEND=demo PORT=3001 npm start)
-
-# 3. open the UIs (any static server, or open the files directly)
-#    apps/consumer-pwa/index.html   — scan/verify a product QR
-#    apps/collector-pwa/index.html  — log a field collection
-#    apps/regulator/index.html      — zones, quotas, one-click recall
+# build + launch the gateway with the durable, real-clock ledger
+(cd apps/gateway && npm install && npm run build && npm run start:live)
 ```
 
-The UIs auto-detect the gateway on `http://localhost:3001`. If it isn't running they render
-from **bundled real captured responses**, so they're demonstrable offline (a chip shows
-which mode is active).
+Then open **http://localhost:3001** — one server hosts both the API and all five dashboards:
 
-Replay the full §9.1 golden path against a running gateway:
+| Page | Who | What they do |
+|---|---|---|
+| `/` | everyone | live system overview + role links |
+| `/collector.html` | collector | log a harvest; watch the 5 MPR checks pass or reject with a reason |
+| `/operator.html` | aggregator · lab · maker | aggregate, mass-balance merge, dual-endorsed lab test, formulate + mint a signed QR |
+| `/regulator.html` | NMPB | live zone-quota map, over-harvest alerts, batch audit, one-click recall |
+| `/consumer.html` | public | scan/paste a QR token → provenance, GACP score, cryptographic authenticity |
+
+Everything a judge sees is computed live by the server from ledger state — **no mock and no
+fabricated fallback**. Data entered persists to `apps/gateway/data/ledger.json` and survives a
+restart. `POST /admin/reset-demo` re-seeds to a clean state.
+
+Verify the enforcement with the automated golden path (uses the deterministic demo backend):
 
 ```bash
-(cd apps/gateway && node golden-path.mjs)        # 14 checks: valid commit → rejects → merge → QR → recall
-./scripts/reset-demo.sh             # deterministic re-seed for repeat dry runs
+(cd apps/gateway && LEDGER_BACKEND=demo npm run golden-path)   # 14 checks: valid commit → rejects → merge → QR → recall
 ```
+
+> The original self-contained HTML prototypes still live in `apps/{collector,consumer}-pwa`
+> and `apps/regulator` as a design reference. The **served dashboards in `apps/gateway/web`
+> are the real product** — same-origin, live-only, no bundled fallback data.
 
 To run on real Fabric, see `infra/README.md`, then start the gateway with
 `LEDGER_BACKEND=fabric` and the enrollment env vars.
@@ -110,14 +118,20 @@ To run on real Fabric, see `infra/README.md`, then start the gateway with
 ```
 packages/contracts   Frozen EPCIS types, reject codes, API DTOs, composite keys (single source of truth)
 chaincode/ayurledger MPR enforcement (pure, unit-tested) + Fabric Contract adapter + in-memory ledger
-apps/gateway         NestJS §6.4 REST facade, edge validation, typed rejects, ed25519 QR, 2 backends
-apps/collector-pwa   Field entry PWA — pictographic Tier-1, GPS zone-only, offline queue, reject-code UI
-apps/consumer-pwa    Provenance PWA — QR verify, GACP ring, provenance thread, source-farm traceback
-apps/regulator       NMPB console — zone map, quota bands, over-harvest alerts, one-click recall
+apps/gateway         NestJS §6.4 REST facade + 3 backends (demo, live, fabric); serves the dashboards
+apps/gateway/web     The live product UI — collector, operator, regulator, consumer (same-origin, no mock)
+apps/collector-pwa   Original self-contained prototype (design reference)
+apps/consumer-pwa    Original self-contained prototype (design reference)
+apps/regulator       Original self-contained prototype (design reference)
+complete-b           Advanced layer — CP-5/6, RFC-3161, SMS, RBAC, analytics (169 tests)
 seed                 Deterministic reference data (5 species, 3 zones, 4 collectors, quotas)
 scripts              golden-path replay + reset-demo
 infra                DESIGNED 3-org Fabric network notes
 ```
+
+**Three gateway backends, one `LedgerBackend` port, identical enforcement:**
+`demo` (in-memory, deterministic clock — powers the tests), `live` (durable file-backed,
+real clock — the product demo), `fabric` (a real peer — DESIGNED, needs Docker).
 
 ## Test evidence
 

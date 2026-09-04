@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#1E2B23" />
+<title>AyurTrace — Regulator</title>
+<link rel="stylesheet" href="/assets/theme.css" />
+<style>
+  .map-wrap{position:relative} svg.map{width:100%;height:auto;display:block;border-radius:12px;background:#EFEDE2}
+  .zpoly{stroke:#1E2B23;stroke-width:1.5;stroke-opacity:.35;cursor:pointer;transition:fill-opacity .15s}
+  .zpoly:hover{fill-opacity:.85}
+  .zlabel{font-family:var(--sans);font-size:12px;fill:#1E2B23} .zlabel .pct{font-family:var(--serif);font-size:15px}
+  .legend-map{display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--ink-soft);flex-wrap:wrap}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+  .alert{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:10px;
+    background:var(--clay-tint);border:1px solid #e3b8ac;font-size:13px;margin-bottom:8px}
+  .alert.amber{background:var(--amber-tint);border-color:#e6d3a6}
+  .recall-box{display:flex;gap:8px}.recall-box input{flex:1}
+  .lead td:first-child{font-family:var(--serif);font-size:15px;color:var(--forest)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page-h">NMPB regulator dashboard</h1>
+  <p class="page-sub">Read-only oversight across every zone and batch on the ledger. Harvest pressure,
+    over-quota alerts on endangered species, the full audit trail, and recall-to-source in one click.</p>
+
+  <div class="grid g-4" style="margin-bottom:20px">
+    <div class="stat"><div class="n" id="s-batches">—</div><div class="l">Batches tracked</div></div>
+    <div class="stat"><div class="n" id="s-passed">—</div><div class="l">Verified products</div></div>
+    <div class="stat amber"><div class="n" id="s-flagged">—</div><div class="l">Flagged / on hold</div></div>
+    <div class="stat warn"><div class="n" id="s-alerts">—</div><div class="l">Endangered alerts</div></div>
+  </div>
+
+  <div class="grid g-2" style="align-items:start">
+    <div class="card">
+      <h3>Live harvest-pressure map</h3>
+      <div class="lede">Each approved NMPB zone, coloured by its highest species quota band. Click a zone for its species breakdown.</div>
+      <div class="map-wrap"><svg class="map" id="map" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="legend-map">
+        <span><span class="sw" style="background:var(--leaf)"></span>&lt; 50% — healthy</span>
+        <span><span class="sw" style="background:var(--amber)"></span>50–80% — watch</span>
+        <span><span class="sw" style="background:var(--clay)"></span>&gt; 80% — over-harvest risk</span>
+      </div>
+      <div id="zone-detail" style="margin-top:14px"></div>
+    </div>
+
+    <div style="display:grid;gap:16px">
+      <div class="card">
+        <h3>Over-harvest alerts</h3>
+        <div class="lede">Species at or above 80% of their annual per-zone quota.</div>
+        <div id="alerts"></div>
+      </div>
+      <div class="card">
+        <h3>Zone compliance</h3>
+        <div class="lede">Harvest activity and flags recorded per zone.</div>
+        <div class="tbl-wrap"><table id="lead"><thead><tr><th>Zone</th><th>Batches</th><th>Flagged</th><th>On hold</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h3>One-click recall</h3>
+    <div class="lede">Enter any batch or product EPC. The ledger walks input links back to every contributing lot, forward to every finished product, and out to sibling batches from the same collector — the blast radius.</div>
+    <div class="recall-box">
+      <input id="recall-epc" class="mono" placeholder="urn:ayurtrace:lot:… or paste from the table below" />
+      <button class="btn-clay" id="recall-go">Trace recall</button>
+    </div>
+    <div id="recall-res"></div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h3>Batch audit trail</h3>
+    <div class="lede">Every event on the ledger, newest first. Click <span class="kbd">recall</span> to trace any row.</div>
+    <div class="tbl-wrap"><table id="audit"><thead><tr><th>EPC</th><th>Species</th><th>Zone</th><th>Status</th><th>GACP</th><th>Flags</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+<footer class="foot">This dashboard only reads. Regulator writes (MPR policy updates) and precise GPS of
+  endangered wild sites are role-gated and not exposed to the public consumer view.</footer>
+
+<script src="/assets/app.js"></script>
+<script>
+AT.chrome('NMPB · regulator (read-only)', '/regulator.html');
+let ZONES=[], QUOTABYZONE={}, BATCHES=[];
+
+const worstBand = (rows)=> rows.some(r=>r.band==='RED')?'RED':rows.some(r=>r.band==='AMBER')?'AMBER':'GREEN';
+const BANDFILL = { GREEN:'#4A8B6F', AMBER:'#C0873A', RED:'#A8412A' };
+
+async function load(){
+  const [stats, zres, bres] = await Promise.all([AT.get('/stats'), AT.get('/zones'), AT.get('/batches')]);
+  AT.$('#s-batches').textContent = stats.totalBatches;
+  AT.$('#s-passed').textContent = stats.passedProducts;
+  AT.$('#s-flagged').textContent = stats.flagged + stats.onHold;
+  AT.$('#s-alerts').textContent = stats.endangeredAlerts;
+  ZONES = zres.zones; BATCHES = bres.batches;
+  const quotas = await Promise.all(ZONES.map(z=>AT.get(`/zones/${encodeURIComponent(z.id)}/quota`)));
+  quotas.forEach(q=>QUOTABYZONE[q.zoneId]=q.quotas);
+  drawMap(); drawAlerts(); drawLeaderboard(); drawAudit();
+}
+
+function drawMap(){
+  const svg = AT.$('#map'); svg.innerHTML='';
+  const pts = ZONES.flatMap(z=>z.polygon);
+  const lons = pts.map(p=>p[0]), lats = pts.map(p=>p[1]);
+  let minX=Math.min(...lons),maxX=Math.max(...lons),minY=Math.min(...lats),maxY=Math.max(...lats);
+  const padX=(maxX-minX)*0.12||0.1, padY=(maxY-minY)*0.18||0.1;
+  minX-=padX;maxX+=padX;minY-=padY;maxY+=padY;
+  const W=1000,H=620;
+  const sx = lon => ( (lon-minX)/(maxX-minX) )*W;
+  const sy = lat => H - ( (lat-minY)/(maxY-minY) )*H; // flip: north up
+  ZONES.forEach(z=>{
+    const rows = QUOTABYZONE[z.id]||[];
+    const band = rows.length?worstBand(rows):'GREEN';
+    const maxPct = rows.length?Math.max(...rows.map(r=>r.consumedPct)):0;
+    const d = z.polygon.map((p,i)=>`${i?'L':'M'}${sx(p[0]).toFixed(1)} ${sy(p[1]).toFixed(1)}`).join(' ')+' Z';
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',d); path.setAttribute('class','zpoly');
+    path.setAttribute('fill',BANDFILL[band]); path.setAttribute('fill-opacity','0.62');
+    path.addEventListener('click',()=>zoneDetail(z.id));
+    svg.appendChild(path);
+    const cx = z.polygon.slice(0,-1).reduce((a,p)=>a+sx(p[0]),0)/(z.polygon.length-1);
+    const cy = z.polygon.slice(0,-1).reduce((a,p)=>a+sy(p[1]),0)/(z.polygon.length-1);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',cx.toFixed(0)); t.setAttribute('y',cy.toFixed(0)); t.setAttribute('text-anchor','middle'); t.setAttribute('class','zlabel');
+    t.innerHTML = `<tspan x="${cx.toFixed(0)}">${AT.esc(z.id.replace('NMPB-KA-',''))}</tspan><tspan class="pct" x="${cx.toFixed(0)}" dy="18">${maxPct.toFixed(0)}%</tspan>`;
+    svg.appendChild(t);
+  });
+}
+
+function zoneDetail(id){
+  const z = ZONES.find(z=>z.id===id); const rows = QUOTABYZONE[id]||[];
+  const box = AT.$('#zone-detail');
+  if(!rows.length){ box.innerHTML=`<div class="small muted">${AT.esc(z.name)} — no quotas configured.</div>`; return; }
+  box.innerHTML = `<div style="font-family:var(--serif);font-size:15px;margin-bottom:8px">${AT.esc(z.name)}</div>` +
+    rows.map(r=>{
+      const pct=Math.min(100,r.consumedPct).toFixed(0);
+      return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12.5px">
+        <span>${AT.esc(r.speciesCode)} · ${AT.esc(r.season)}</span><span class="muted">${r.consumedKg}/${r.annualLimitKg} kg</span></div>
+        <div class="bar band-${r.band}"><i style="width:${pct}%"></i></div></div>`;
+    }).join('');
+}
+
+function drawAlerts(){
+  const box = AT.$('#alerts'); const alerts=[];
+  for(const z of ZONES) for(const r of (QUOTABYZONE[z.id]||[])) if(r.consumedPct>=80)
+    alerts.push({z:z.id, r});
+  if(!alerts.length){ box.innerHTML=`<div class="small muted">No zones over 80%. Harvest pressure within sustainable limits.</div>`; return; }
+  box.innerHTML = alerts.map(a=>`<div class="alert ${a.r.consumedPct>100?'':'amber'}">
+    <span>⚠️</span><div><b>${AT.esc(a.r.speciesCode)}</b> in ${AT.esc(a.z.replace('NMPB-KA-',''))} at
+    <b>${a.r.consumedPct.toFixed(0)}%</b> of quota (${a.r.consumedKg}/${a.r.annualLimitKg} kg).
+    ${a.r.consumedPct>=100?'Collection closed until next season.':'Approaching cap — 80% SMS warning issued to cluster.'}</div></div>`).join('');
+}
+
+function drawLeaderboard(){
+  const tb = AT.$('#lead tbody'); const byZone={};
+  for(const b of BATCHES){ const z=b.zoneId||'—'; (byZone[z]=byZone[z]||{n:0,f:0,h:0}); byZone[z].n++;
+    if(b.flags&&b.flags.length) byZone[z].f++; if(b.status==='HOLD') byZone[z].h++; }
+  const rows = Object.entries(byZone).sort((a,b)=>b[1].n-a[1].n);
+  tb.innerHTML = rows.length?rows.map(([z,v])=>`<tr class="lead"><td>${AT.esc(z.replace('NMPB-KA-',''))}</td><td>${v.n}</td>
+    <td>${v.f?`<span class="badge b-fail">${v.f}</span>`:'0'}</td><td>${v.h?`<span class="badge b-hold">${v.h}</span>`:'0'}</td></tr>`).join('')
+    : `<tr><td colspan="4" class="muted small">No batches yet.</td></tr>`;
+}
+
+function drawAudit(){
+  const tb = AT.$('#audit tbody');
+  if(!BATCHES.length){ tb.innerHTML=`<tr><td colspan="7" class="muted small">Ledger empty — add a collection to begin.</td></tr>`; return; }
+  tb.innerHTML = BATCHES.map(b=>`<tr>
+    <td class="mono">${AT.esc(AT.shortEpc(b.epc))}</td>
+    <td>${AT.esc(b.speciesCode)}</td>
+    <td class="small">${AT.esc((b.zoneId||'—').replace('NMPB-KA-',''))}</td>
+    <td>${AT.statusBadge(b.status)}</td>
+    <td>${b.gacpScore}</td>
+    <td>${(b.flags||[]).map(f=>`<span class="badge b-fail" title="${AT.esc(f)}">!</span>`).join(' ')||'<span class="muted">—</span>'}</td>
+    <td><button class="btn-ghost" data-epc="${AT.esc(b.epc)}">recall</button></td>
+  </tr>`).join('');
+  AT.$$('#audit button[data-epc]').forEach(btn=>btn.addEventListener('click',()=>{ AT.$('#recall-epc').value=btn.dataset.epc; doRecall(); }));
+}
+
+async function doRecall(){
+  const epc = AT.$('#recall-epc').value.trim(); const box=AT.$('#recall-res');
+  if(!epc){ box.innerHTML=''; return; }
+  box.innerHTML = `<div class="small muted" style="margin-top:12px"><span class="spinner"></span> Tracing…</div>`;
+  try{
+    const d = await AT.post('/recall/'+encodeURIComponent(epc));
+    box.innerHTML = `<div class="banner ok" style="margin-top:14px">
+      <b>Recall traced for</b> <span class="mono">${AT.esc(AT.shortEpc(d.originEpc))}</span>.
+      <div class="grid g-3" style="margin-top:12px">
+        <div><div class="small muted">Finished products affected</div><div style="font-family:var(--serif);font-size:22px;color:var(--clay)">${d.affectedProducts.length}</div>${d.affectedProducts.map(p=>`<div class="mono small">${AT.esc(AT.shortEpc(p))}</div>`).join('')||'<span class="muted small">none</span>'}</div>
+        <div><div class="small muted">Contributing source lots</div><div style="font-family:var(--serif);font-size:22px;color:var(--forest)">${d.sourceLots.length}</div>${d.sourceLots.map(s=>`<div class="mono small">${AT.esc(AT.shortEpc(s.epc))} · ${(s.proportion*100).toFixed(0)}%</div>`).join('')||'<span class="muted small">none</span>'}</div>
+        <div><div class="small muted">Sibling batches (same collector)</div><div style="font-family:var(--serif);font-size:22px;color:var(--amber)">${d.siblingBatches.length}</div>${d.siblingBatches.map(s=>`<div class="mono small">${AT.esc(AT.shortEpc(s))}</div>`).join('')||'<span class="muted small">none</span>'}</div>
+      </div></div>`;
+  }catch(e){ box.innerHTML = `<div class="banner err" style="margin-top:14px"><div class="code">${AT.esc(e.code)}</div><div>${AT.esc(e.message)}</div></div>`; }
+}
+AT.$('#recall-go').addEventListener('click', doRecall);
+
+load().catch(e=>{ AT.$('#alerts').innerHTML = `<div class="banner err"><div class="code">${AT.esc(e.code||'ERROR')}</div><div>${AT.esc(e.message)}</div></div>`; });
+setInterval(()=>load().catch(()=>{}), 12000); // live refresh
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#1E2B23" />
+<title>AyurTrace — Botanical Traceability</title>
+<link rel="stylesheet" href="/assets/theme.css" />
+<style>
+  .hero{margin:6px 0 26px}
+  .hero .eyebrow{font-family:var(--mono);font-size:12px;color:var(--leaf);letter-spacing:.5px}
+  .hero h1{font-family:var(--serif);font-size:34px;font-weight:600;margin:8px 0 6px;line-height:1.1}
+  .hero p{color:var(--ink-soft);font-size:15px;max-width:70ch;margin:0}
+  .roles{margin-top:8px}
+  .role-card{display:block;text-decoration:none;color:inherit;transition:transform .12s,box-shadow .12s}
+  .role-card:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(30,43,35,.06),0 14px 32px rgba(30,43,35,.10)}
+  .role-card .ic{width:34px;height:34px;color:var(--forest);margin-bottom:10px}
+  .role-card h3{font-size:17px;margin:0 0 4px}
+  .chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .chain .step{background:var(--white);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:12.5px}
+  .chain .arr{color:var(--leaf)}
+  .legend b{font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="eyebrow">SH-HLT-10 · Enforcement infrastructure</div>
+    <h1>Provenance for India's Ayurvedic herbs,<br/>enforced at the moment of commit.</h1>
+    <p>AyurTrace encodes NMPB geo-fence zones, species conservation quotas, and GACP checkpoints
+      directly in ledger logic — so a non-compliant collection or a diluted batch is
+      <b>rejected at commit time and permanently attributed to its actor</b>, not discovered weeks later.
+      Every screen below is running live against this server.</p>
+  </section>
+
+  <div class="grid g-4" id="stats" style="margin-bottom:22px">
+    <div class="stat"><div class="n" id="s-batches">—</div><div class="l">Batches on ledger</div></div>
+    <div class="stat"><div class="n" id="s-zones">—</div><div class="l">Approved NMPB zones</div></div>
+    <div class="stat amber"><div class="n" id="s-flagged">—</div><div class="l">Flagged / on hold</div></div>
+    <div class="stat warn"><div class="n" id="s-alerts">—</div><div class="l">Endangered-quota alerts</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:22px">
+    <h3>The journey, end to end</h3>
+    <div class="lede">Each step writes an EPCIS 2.0 event and is gated by chaincode. Walk it yourself using the role apps.</div>
+    <div class="chain">
+      <span class="step">🌿 Collection</span><span class="arr">→</span>
+      <span class="step">⚖️ Aggregation</span><span class="arr">→</span>
+      <span class="step">🔀 Merge / process</span><span class="arr">→</span>
+      <span class="step">🧪 Lab test (dual-endorsed)</span><span class="arr">→</span>
+      <span class="step">🏭 Formulation + QR</span><span class="arr">→</span>
+      <span class="step">📱 Consumer verify</span>
+    </div>
+  </div>
+
+  <div class="grid g-3 roles">
+    <a class="card role-card" href="/collector.html">
+      <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 16 4 9.5C4 6 7 3.5 12 3.5C17 3.5 20 6 20 9.5C20 16 12 21 12 21Z" stroke="currentColor" stroke-width="1.5"/><path d="M12 7V17M12 11L8.5 9M12 13.5L15.5 11.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <h3>Collector field app</h3>
+      <div class="lede">Log a harvest with GPS, species and part. Watch the 5 MPR checks pass — or reject with a reason.</div>
+      <span class="chip">Tier-1 PWA · live</span>
+    </a>
+    <a class="card role-card" href="/operator.html">
+      <svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="9" width="17" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 9V6.5A1.5 1.5 0 019.5 5h5A1.5 1.5 0 0116 6.5V9M8.5 13.5h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <h3>Supply-chain console</h3>
+      <div class="lede">Aggregate, mass-balance merge, dual-endorsed lab test, and formulate into a signed-QR product.</div>
+      <span class="chip">Aggregator · Lab · Maker</span>
+    </a>
+    <a class="card role-card" href="/regulator.html">
+      <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 3.5l7 3v5c0 4.2-2.9 7.4-7 8.5-4.1-1.1-7-4.3-7-8.5v-5l7-3Z" stroke="currentColor" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h3>NMPB regulator dashboard</h3>
+      <div class="lede">Live zone-quota map, over-harvest alerts, full batch audit, and one-click recall to source.</div>
+      <span class="chip">Read-only oversight</span>
+    </a>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3>Consumer provenance</h3>
+    <div class="lede">Scan or paste a product QR token to see the whole chain, the GACP score, and a cryptographic authenticity check. <a href="/consumer.html">Open the consumer app →</a></div>
+    <div class="tag-legend legend">
+      <span>Honesty tags used throughout:</span>
+      <span class="chip">🟢 BUILT — live here</span>
+      <span class="chip" style="background:var(--amber-tint);color:#8a5a1a">🟡 SIMULATED — real interface, mocked input</span>
+      <span class="chip" style="background:#E4EDF3;color:#2C5468">🔵 DESIGNED — needs external infra</span>
+    </div>
+  </div>
+</div>
+<footer class="foot">
+  AyurTrace runs the same enforcement code that targets Hyperledger Fabric v2.5, here over a durable
+  local ledger. The live Fabric network is 🔵 DESIGNED (needs Docker). Nothing on these pages is faked —
+  a value you see was computed by this server from data on the ledger.
+</footer>
+<script src="/assets/app.js"></script>
+<script>
+  AT.chrome('', '/index.html');
+  (async () => {
+    try {
+      const s = await AT.get('/stats');
+      AT.$('#s-batches').textContent = s.totalBatches;
+      AT.$('#s-zones').textContent = s.zones;
+      AT.$('#s-flagged').textContent = s.flagged + s.onHold;
+      AT.$('#s-alerts').textContent = s.endangeredAlerts;
+    } catch (e) {
+      for (const id of ['s-batches','s-zones','s-flagged','s-alerts']) AT.$('#'+id).textContent = '⚠';
+    }
+  })();
+</script>
+</body>
+</html>
