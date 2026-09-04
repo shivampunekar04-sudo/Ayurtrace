@@ -38,7 +38,8 @@
     <button data-tab="agg" class="on">⚖️ Aggregate + weigh</button>
     <button data-tab="merge">🔀 Merge / process</button>
     <button data-tab="lab">🧪 Lab test</button>
-    <button data-tab="form">🏭 Formulate + QR</button>
+    <button data-tab="form">🏭 Formulate</button>
+    <button data-tab="qr">🏷️ Product QR</button>
   </div>
 
   <!-- AGGREGATION -->
@@ -128,6 +129,16 @@
       <div id="form-res"></div>
     </div>
   </div>
+
+  <!-- PRODUCT QR -->
+  <div class="pane" id="pane-qr">
+    <div class="card">
+      <h3>Generate a product QR label</h3>
+      <div class="lede">Every finished product — all seven checkpoints passed — can produce its consumer QR here. Display it on screen for a judge to scan, or download it to print on the pack.</div>
+      <div class="picker" id="qr-list"></div>
+      <div id="qr-out"></div>
+    </div>
+  </div>
 </div>
 <footer class="foot">Every event here is committed to the same ledger the collector and regulator read.
   Refresh the regulator dashboard after each step to watch the batch advance.</footer>
@@ -166,7 +177,7 @@ async function refresh(){
   try{
     const [b, z] = await Promise.all([AT.get('/batches'), AT.get('/zones')]);
     BATCHES = b.batches; ZONES = z.zones;
-    fillZones(); renderPickers();
+    fillZones(); renderPickers(); renderQrList();
   }catch(e){ /* health pill already shows offline */ }
 }
 function fillZones(){
@@ -198,6 +209,37 @@ function renderPickers(){
   AT.$('#form-pick').innerHTML = passed.length?passed.map(b=>rowHtml(b,false)).join(''):emptyMsg('No COMPLETE_PASSED batches yet — run a lab test first.');
 }
 function emptyMsg(t){ return `<div class="pick dim"><span class="epc muted">${t}</span></div>`; }
+
+// Product QR tab — list finished products, generate a scannable label on demand.
+function renderQrList(){
+  const el = AT.$('#qr-list'); if(!el) return;
+  const products = BATCHES.filter(b=>b.epc.includes('output:FORMULATION-') && b.status==='COMPLETE_PASSED');
+  el.innerHTML = products.length ? products.map(b=>`<div class="pick" data-epc="${AT.esc(b.epc)}">
+      <span class="epc">${AT.esc(b.productName || AT.shortEpc(b.epc))}</span>
+      ${AT.statusBadge(b.status)}
+      <button class="btn-ghost gen" data-epc="${AT.esc(b.epc)}">Generate QR</button>
+    </div>`).join('') : emptyMsg('No finished products yet — formulate one in the Formulate tab (needs all checkpoints passed).');
+  AT.$$('#qr-list .gen').forEach(btn=>btn.addEventListener('click',()=>genProductQr(btn.dataset.epc)));
+}
+async function genProductQr(epc){
+  const out = AT.$('#qr-out');
+  out.innerHTML = `<div class="small muted" style="margin-top:12px"><span class="spinner"></span> Generating label…</div>`;
+  const qrSrc = '/qr/product/'+encodeURIComponent(epc)+'/qr.svg';
+  let name = AT.shortEpc(epc), token = '';
+  try{ const t = await AT.get('/qr/product/'+encodeURIComponent(epc)+'/token'); name = t.productName || name; token = t.token; }catch(_){}
+  const openHref = token ? '/product.html?token='+encodeURIComponent(token) : '#';
+  out.innerHTML = `<div class="banner ok"><b>Consumer QR — ${AT.esc(name)}</b>
+    <div class="qr"><img class="qrimg" src="${qrSrc}" alt="Product QR" width="200" height="200"/>
+    <div style="flex:1;min-width:220px">
+      <div class="small muted" style="margin-bottom:6px">Scan with any phone camera → opens the clean consumer authenticity page for this product.</div>
+      <div id="scan-hint" class="small"></div>
+      <div style="margin-top:10px">
+        <a class="btn-ghost" href="${qrSrc}" download="ayurtrace-${AT.esc(AT.shortEpc(epc))}.svg">Download QR</a>
+        <a class="btn-ghost" href="${openHref}" target="_blank" rel="noopener">Open consumer page</a>
+      </div>
+    </div></div></div>`;
+  showScanHint();
+}
 function selected(container, withKg){
   return AT.$$('.pick', AT.$('#'+container)).filter(p=>p.querySelector('input[type=checkbox]')?.checked)
     .map(p=>({ epc:p.dataset.epc, kg: withKg?Number(p.querySelector('.kg')?.value||0):undefined }));

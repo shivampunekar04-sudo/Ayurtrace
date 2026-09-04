@@ -1,7 +1,7 @@
 import { Controller, Get, Header, Inject, Param, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import QRCode from 'qrcode';
-import { GacpStatus, type Ok, type QrVerifyResponse } from '@ayurtrace/contracts';
+import { EPC, GacpStatus, type Ok, type QrVerifyResponse } from '@ayurtrace/contracts';
 import { LEDGER_BACKEND, type LedgerBackend } from '../ledger/ledger.backend.js';
 import { QrService } from './qr.service.js';
 
@@ -22,7 +22,38 @@ export class QrController {
   @Header('content-type', 'image/svg+xml')
   @Header('cache-control', 'no-store')
   async qrImage(@Param('serial') serial: string, @Req() req: Request): Promise<string> {
-    const token = decodeURIComponent(serial);
+    return this.svgForToken(decodeURIComponent(serial), req);
+  }
+
+  /**
+   * Deterministic signed token for a finished product's unit #1 — lets the dashboard
+   * (re)generate a label for any all-tests-passed product from its EPC alone, without
+   * having kept the token from formulation time. ed25519 signing is deterministic, so
+   * this is the same token minted at formulation.
+   */
+  @Get('product/:epc/token')
+  async productToken(@Param('epc') epc: string): Promise<Ok<unknown>> {
+    const productEpc = decodeURIComponent(epc);
+    const { batch } = await this.ledger.getBatch(productEpc);
+    const passed = batch.status === GacpStatus.COMPLETE_PASSED && batch.flags.length === 0;
+    const serial = EPC.serial(productEpc, 1);
+    const token = this.qr.mint(productEpc, [serial])[0].token;
+    return { ok: true, data: { productEpc, serial, token, passed, productName: batch.productName ?? null } };
+  }
+
+  /** QR image (SVG) for a finished product, addressed by its EPC. */
+  @Get('product/:epc/qr.svg')
+  @Header('content-type', 'image/svg+xml')
+  @Header('cache-control', 'no-store')
+  async productQr(@Param('epc') epc: string, @Req() req: Request): Promise<string> {
+    const productEpc = decodeURIComponent(epc);
+    const serial = EPC.serial(productEpc, 1);
+    const token = this.qr.mint(productEpc, [serial])[0].token;
+    return this.svgForToken(token, req);
+  }
+
+  /** Build a scannable SVG QR that encodes the consumer product page for this token. */
+  private async svgForToken(token: string, req: Request): Promise<string> {
     const host = req.headers['x-forwarded-host'] ?? req.headers.host ?? 'localhost:3001';
     const proto = (req.headers['x-forwarded-proto'] as string) ?? req.protocol ?? 'http';
     const url = `${proto}://${host}/product.html?token=${encodeURIComponent(token)}`;
