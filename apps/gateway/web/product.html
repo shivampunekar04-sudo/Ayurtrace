@@ -9,7 +9,7 @@
  :root{
  --paper:#F4F1E8; --paper-2:#ECE7D8; --ink:#1E2B23; --ink-soft:#5A675E;
  --forest:#2C5F4A; --leaf:#4A8B6F; --leaf-tint:#DCE8DF; --gold:#B8893D;
- --amber:#C0873A; --clay:#A8412A; --clay-tint:#F0DAD2; --line:#D8D2C2; --white:#FDFCF8;
+ --amber:#C0873A; --amber-tint:#F3E7CE; --clay:#A8412A; --clay-tint:#F0DAD2; --line:#D8D2C2; --white:#FDFCF8;
  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
  }
@@ -32,7 +32,10 @@
  .seal{width:112px;height:112px;margin:0 auto 14px;display:block;filter:drop-shadow(0 6px 14px rgba(44,95,74,.22))}
  .verdict{font-family:var(--serif);font-size:27px;font-weight:600;line-height:1.15;margin:0}
  .verdict.bad{color:var(--clay)}
+ .verdict.warn{color:var(--amber)}
  .verdict-sub{color:var(--ink-soft);font-size:14px;margin:6px 0 0}
+ .notewrap{background:var(--amber-tint);border:1px solid #e6d3a6;border-radius:15px;padding:15px 16px;margin:16px 0;font-size:13.5px;color:#7a5a1a;display:flex;gap:10px;align-items:flex-start}
+ .notewrap b{color:#5f4514}
  .product{font-family:var(--serif);font-size:23px;font-weight:600;margin:20px 0 2px;text-align:center;line-height:1.2}
  .botanical{text-align:center;font-style:italic;color:var(--ink-soft);font-size:14px;margin:0}
 
@@ -94,6 +97,7 @@ function ring(score){
 }
 const sealOK = `<svg class="seal" viewBox="0 0 112 112"><circle cx="56" cy="56" r="46" fill="#2C5F4A"/><circle cx="56" cy="56" r="46" fill="none" stroke="#B8893D" stroke-width="2.5" stroke-dasharray="2 5"/><path d="M39 57l11 11 24-27" stroke="#FDFCF8" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const sealBad = `<svg class="seal" viewBox="0 0 112 112"><circle cx="56" cy="56" r="46" fill="#A8412A"/><path d="M42 42l28 28M70 42L42 70" stroke="#FDFCF8" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`;
+const sealWarn = `<svg class="seal" viewBox="0 0 112 112"><circle cx="56" cy="56" r="46" fill="#C0873A"/><circle cx="56" cy="56" r="46" fill="none" stroke="#7a5a1a" stroke-width="2.5" stroke-dasharray="2 5"/><path d="M56 32v32" stroke="#FDFCF8" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="56" cy="79" r="4.5" fill="#FDFCF8"/></svg>`;
 
 function rea(title, body){
  return `<div class="rea"><div class="tick">${TICK}</div><h3>${esc(title)}</h3><p>${esc(body)}</p></div>`;
@@ -103,78 +107,77 @@ async function run(){
  const q = new URLSearchParams(location.search);
  const token = q.get('token'); const epcParam = q.get('epc');
  try{
- let productEpc = epcParam, authentic = false, score = 0, signatureOk = true;
+ let productEpc = epcParam, score = 0, signatureOk = true;
  if(token){
  const v = await getJSON('/qr/'+encodeURIComponent(token)+'/verify');
- signatureOk = v.signatureValid; productEpc = v.productEpc; authentic = v.verifiedAuthentic; score = v.gacpScore;
+ signatureOk = v.signatureValid; productEpc = v.productEpc; score = v.gacpScore;
  if(!signatureOk){ return renderBad('This QR could not be verified','The digital signature did not match. This may be a copied or tampered label — please don’t purchase it as genuine.'); }
  }
  if(!productEpc){ return renderBad('No product found','This code doesn’t point to a registered product.'); }
 
  const [data, sp, zo] = await Promise.all([ getJSON('/batch/'+encodeURIComponent(productEpc)), getJSON('/species'), getJSON('/zones') ]);
  const batch = data.batch, timeline = data.timeline||[];
- if(!token){ authentic = batch.status==='COMPLETE_PASSED' && (batch.flags||[]).length===0; score = batch.gacpScore; }
+ if(!token){ score = batch.gacpScore; }
 
  const speciesMap = Object.fromEntries((sp.species||[]).map(s=>[s.code,s]));
  const zoneMap = Object.fromEntries((zo.zones||[]).map(z=>[z.id,z.name]));
  const species = speciesMap[batch.speciesCode] || { commonName: batch.speciesCode, botanicalName:'' };
-
  const collections = timeline.filter(t=>t.step==='COLLECTION');
  const testing = timeline.find(t=>t.step==='TESTING');
  const dnaConfirmed = testing && testing.detail && testing.detail.dna === true;
+ const labResult = testing && testing.detail ? testing.detail.result : null;
  const originZone = collections[0] ? cleanPlace(zoneMap[collections[0].zoneId] || collections[0].zoneId) : '';
  const productName = batch.productName || (species.commonName+' product');
+ const flags = batch.flags || [];
 
- if(!authentic){
- return renderBad('Not fully verified', 'This product has open quality flags or unfinished checks. Treat it with caution.', productName, species);
+ // three verdict tiers: genuine / partly verified / not verified
+ if(batch.status==='COMPLETE_FAILED' || batch.status==='HOLD'){
+ return renderBad('Not verified', 'This product failed a safety or quality check and should not be sold as genuine.', productName, species);
  }
+ const isOk = batch.status==='COMPLETE_PASSED' && flags.length===0 && score>=100;
 
- // reassurances a buyer cares about
+ const caveats = [];
+ if(!dnaConfirmed) caveats.push('Species was <b>not DNA-barcoded</b> on this lot, so its identity is not independently confirmed.');
+ if(flags.indexOf('QUOTA_OVERDRAW_FLAGGED')>=0) caveats.push('Harvest <b>exceeded the sustainable quota</b> and was flagged to the regulator.');
+ if(flags.indexOf('WEIGHT_VARIANCE_HOLD')>=0) caveats.push('Weighed amount differed from what was declared, and was <b>flagged for inspection</b>.');
+ if(batch.status!=='COMPLETE_PASSED') caveats.push('Some quality checkpoints are <b>still incomplete</b>.');
+ if(!caveats.length) caveats.push('Some optional quality checks are incomplete.');
+
  const reas = [
- rea('Genuine', 'Verified by its digital signature — not a copy or fake.'),
- rea('Lab-tested safe', 'Independently tested; contaminants within safe limits.'),
+ rea('Traceable', 'Its full journey is on the ledger and tamper-evident.'),
+ rea('Lab-tested', (labResult==='PASSED'?'Passed safety limits':'Safety tested')+' at an accredited lab.'),
  ];
- if(dnaConfirmed) reas.push(rea('True '+species.commonName, 'DNA test confirmed the real species — no adulteration.'));
- else reas.push(rea('Quality assured', 'Passed every good-practice checkpoint.'));
- if(!species.endangered) reas.push(rea('Ethically sourced', 'Harvested by a licensed collector within limits.'));
- else reas.push(rea('Conservation-safe', 'Sourced within protected sustainable quotas.'));
+ if(dnaConfirmed) reas.push(rea('True '+species.commonName, 'DNA test confirmed the real species, no adulteration.'));
+ else reas.push(rea('Identity pending', 'Not DNA-barcoded on this particular lot.'));
+ if(!species.endangered) reas.push(rea('Sourced', 'Collected by a licensed collector.'));
+ else reas.push(rea('Protected species', 'Sourced under conservation quotas.'));
 
- // plain-language journey
- const label = { COLLECTION:'Grown & collected', PROCESSING:'Processed & dried', TESTING:'Lab tested & passed', FORMULATION:'Made into this product', AGGREGATION:'Gathered & weighed', CUSTODY:'Handled in transit' };
+ const label = { COLLECTION:'Grown & collected', PROCESSING:'Processed & dried', TESTING:(labResult==='PASSED'?'Lab tested & passed':'Lab tested'), FORMULATION:'Made into this product', AGGREGATION:'Gathered & weighed', CUSTODY:'Handled in transit' };
  const seen = new Set();
  const steps = timeline.filter(t=>{ const k=t.step; if(k==='COLLECTION'){return true;} if(seen.has(k))return false; seen.add(k); return true; });
  const journey = steps.map(t=>{
  const place = zoneMap[t.zoneId] ? cleanPlace(zoneMap[t.zoneId]) : '';
  const where = (t.step==='COLLECTION' && place) ? ' · '+place : '';
- return `<div class="node"><span class="dot"></span><div class="st">${esc(label[t.step]||t.step)}</div>
- <div class="meta">${esc(fmtDate(t.time))}${esc(where)}</div></div>`;
+ return `<div class="node"><span class="dot"></span><div class="st">${esc(label[t.step]||t.step)}</div><div class="meta">${esc(fmtDate(t.time))}${esc(where)}</div></div>`;
  }).join('');
 
+ const hero = isOk
+ ? `<div class="hero">${sealOK}<h1 class="verdict">Genuine Product</h1><p class="verdict-sub">Verified authentic on the AyurTrace ledger</p></div>`
+ : `<div class="hero">${sealWarn}<h1 class="verdict warn">Partly Verified &middot; ${score}%</h1><p class="verdict-sub">Genuine and traceable, with the note below</p></div>`;
+ const note = isOk ? '' : `<div class="notewrap"><span>&#9888;&#65039;</span><div>${caveats.join('<br>')}</div></div>`;
+
  $('#app').innerHTML = `
- <div class="hero">
- ${sealOK}
- <h1 class="verdict">Genuine Product</h1>
- <p class="verdict-sub">Verified authentic on the AyurTrace ledger</p>
- </div>
+ ${hero}
  <div class="product">${esc(productName)}</div>
  ${species.botanicalName?`<p class="botanical">${esc(species.botanicalName)}</p>`:''}
-
+ ${note}
  <div class="grid">${reas.join('')}</div>
-
- <div class="score">${ring(score)}
- <div><p class="lbl">Quality score ${score}/100</p>
- <p class="sub">Across sourcing, purity and identity checks.</p></div>
- </div>
-
- ${originZone?`<div class="origin"> <div>Sustainably sourced from <b>${esc(originZone)}</b>.</div></div>`:''}
-
+ <div class="score">${ring(score)}<div><p class="lbl">Quality score ${score}/100</p><p class="sub">Across sourcing, purity and identity checks.</p></div></div>
+ ${originZone?`<div class="origin"><span>&#127807;</span><div>Sourced from <b>${esc(originZone)}</b>.</div></div>`:''}
  <div class="sec-title">From farm to shelf</div>
  <div class="thread">${journey}</div>
-
- <div class="footer">
- <div class="chip"> Verified on the blockchain</div>
- <div>Every step above was recorded and is tamper-evident. This exact pack was checked just now.</div>
- </div>`;
+ <div class="footer"><div class="chip">&#128274; Verified on the blockchain</div>
+ <div>Every step above was recorded and is tamper-evident. This exact pack was checked just now.</div></div>`;
  }catch(e){
  renderBad('Couldn’t check this product', (e && e.message) ? e.message : 'Please try again in a moment.');
  }
