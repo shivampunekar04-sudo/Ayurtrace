@@ -12,6 +12,7 @@ import { ZonesController } from './zones/zones.controller.js';
 import { RecallController } from './recall/recall.controller.js';
 import { RegistryController } from './registry/registry.controller.js';
 import { QrController } from './qr/qr.controller.js';
+import { ShortLinkController } from './qr/shortlink.controller.js';
 import { AdminController } from './admin.controller.js';
 import { SpeciesIdentifyController } from './species/identify.controller.js';
 import { SpeciesIdentifyService } from './species/identify.service.js';
@@ -32,7 +33,7 @@ const backendProvider: Provider = { provide: LEDGER_BACKEND, useClass: backendCl
 @Module({
   controllers: [
     EventsController, BatchController, ZonesController, RecallController,
-    RegistryController, QrController, AdminController, SpeciesIdentifyController,
+    RegistryController, QrController, ShortLinkController, AdminController, SpeciesIdentifyController,
     LabReportExtractController,
   ],
   providers: [
