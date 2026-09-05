@@ -7,90 +7,90 @@
 <title>AyurTrace — Collector</title>
 <link rel="stylesheet" href="/assets/theme.css" />
 <style>
-  .checks{display:grid;gap:8px;margin-top:14px}
-  .chk{display:flex;align-items:center;gap:10px;font-size:13px;padding:9px 12px;border-radius:9px;
-    background:var(--paper);border:1px solid var(--line)}
-  .chk .mk{width:18px;height:18px;flex:0 0 auto}
-  .chk.pass{background:var(--leaf-tint);border-color:#bcd6c6}
-  .chk.fail{background:var(--clay-tint);border-color:#e3b8ac}
-  .quota-mini{margin-top:6px}
-  .gps{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-  .ai-drop{border:2px dashed #bcd6c6;border-radius:11px;background:var(--paper);
-    padding:16px;text-align:center;cursor:pointer;transition:.15s;color:var(--ink-soft);font-size:13px}
-  .ai-drop:hover{border-color:var(--leaf);background:var(--leaf-tint)}
-  .ai-drop.over{border-color:var(--leaf);background:var(--leaf-tint);color:var(--ink)}
-  .ai-drop.busy{opacity:.7;pointer-events:none}
-  .ai-drop img.prev{max-height:90px;border-radius:8px;margin-bottom:8px;display:block;margin-inline:auto}
-  .ai-res{margin-top:6px;font-size:12.5px}
-  .ai-res .hit{color:var(--leaf);font-weight:600}
+ .checks{display:grid;gap:8px;margin-top:14px}
+ .chk{display:flex;align-items:center;gap:10px;font-size:13px;padding:9px 12px;border-radius:9px;
+ background:var(--paper);border:1px solid var(--line)}
+ .chk .mk{width:18px;height:18px;flex:0 0 auto}
+ .chk.pass{background:var(--leaf-tint);border-color:#bcd6c6}
+ .chk.fail{background:var(--clay-tint);border-color:#e3b8ac}
+ .quota-mini{margin-top:6px}
+ .gps{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+ .ai-drop{border:2px dashed #bcd6c6;border-radius:11px;background:var(--paper);
+ padding:16px;text-align:center;cursor:pointer;transition:.15s;color:var(--ink-soft);font-size:13px}
+ .ai-drop:hover{border-color:var(--leaf);background:var(--leaf-tint)}
+ .ai-drop.over{border-color:var(--leaf);background:var(--leaf-tint);color:var(--ink)}
+ .ai-drop.busy{opacity:.7;pointer-events:none}
+ .ai-drop img.prev{max-height:90px;border-radius:8px;margin-bottom:8px;display:block;margin-inline:auto}
+ .ai-res{margin-top:6px;font-size:12.5px}
+ .ai-res .hit{color:var(--leaf);font-weight:600}
 </style>
 </head>
 <body>
 <div class="wrap narrow">
-  <h1 class="page-h">Log a collection</h1>
-  <p class="page-sub">Tier-1 field entry. On submit, the ledger runs five atomic MPR checks —
-    geo-fence, season, quota, licence, plant-part. Any one failing rejects the whole event and
-    attributes nothing. <span class="chip">🟢 BUILT</span></p>
+ <h1 class="page-h">Log a collection</h1>
+ <p class="page-sub">Tier-1 field entry. On submit, the ledger runs five atomic MPR checks —
+ geo-fence, season, quota, licence, plant-part. Any one failing rejects the whole event and
+ attributes nothing. <span class="chip">BUILT</span></p>
 
-  <div class="card">
-    <div class="field">
-      <label>Collector</label>
-      <select id="collector"></select>
-      <div class="small muted" id="collector-note" style="margin-top:5px"></div>
-    </div>
-    <div class="field">
-      <label>Identify species from a photo <span class="chip">AI</span></label>
-      <div id="drop" class="ai-drop">
-        <input id="imgfile" type="file" accept="image/*" hidden />
-        <div id="drop-inner">📷 Drag &amp; drop a herb photo here, or <u>click to choose</u> — the AI picks the species.</div>
-      </div>
-      <div id="ai-res" class="ai-res muted"></div>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>Species</label>
-        <select id="species"></select>
-      </div>
-      <div class="field">
-        <label>Quantity (kg)</label>
-        <input id="qty" type="number" min="0.001" step="0.1" value="20" />
-      </div>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>Plant part</label>
-        <select id="part"></select>
-      </div>
-      <div class="field">
-        <label>Season</label>
-        <select id="season"></select>
-      </div>
-    </div>
-    <div class="field">
-      <label>Collection point</label>
-      <select id="zone"></select>
-      <div class="gps" id="gps" style="margin-top:6px"></div>
-      <div class="chips">
-        <button class="btn-ghost" type="button" id="usegps">📍 Use my device GPS</button>
-        <button class="btn-ghost" type="button" id="offzone">Try an off-zone point</button>
-      </div>
-    </div>
-    <div class="field">
-      <label>Entry method</label>
-      <select id="entry">
-        <option value="TIER1_PWA">Tier-1 — online PWA (PoLK confirmed)</option>
-        <option value="TIER2_OFFLINE">Tier-2 — offline, cluster soft-reserve</option>
-      </select>
-    </div>
-    <div id="quota-live" class="quota-mini"></div>
-    <hr class="hr" />
-    <button class="btn" id="submit" style="width:100%">Submit collection to ledger</button>
-    <div id="result"></div>
-  </div>
+ <div class="card">
+ <div class="field">
+ <label>Collector</label>
+ <select id="collector"></select>
+ <div class="small muted" id="collector-note" style="margin-top:5px"></div>
+ </div>
+ <div class="field">
+ <label>Identify species from a photo <span class="chip">AI</span></label>
+ <div id="drop" class="ai-drop">
+ <input id="imgfile" type="file" accept="image/*" hidden />
+ <div id="drop-inner">Drag and drop a herb photo, or <u>click to choose</u> — the AI picks the species.</div>
+ </div>
+ <div id="ai-res" class="ai-res muted"></div>
+ </div>
+ <div class="row">
+ <div class="field">
+ <label>Species</label>
+ <select id="species"></select>
+ </div>
+ <div class="field">
+ <label>Quantity (kg)</label>
+ <input id="qty" type="number" min="0.001" step="0.1" value="20" />
+ </div>
+ </div>
+ <div class="row">
+ <div class="field">
+ <label>Plant part</label>
+ <select id="part"></select>
+ </div>
+ <div class="field">
+ <label>Season</label>
+ <select id="season"></select>
+ </div>
+ </div>
+ <div class="field">
+ <label>Collection point</label>
+ <select id="zone"></select>
+ <div class="gps" id="gps" style="margin-top:6px"></div>
+ <div class="chips">
+ <button class="btn-ghost" type="button" id="usegps">Use device GPS</button>
+ <button class="btn-ghost" type="button" id="offzone">Try an off-zone point</button>
+ </div>
+ </div>
+ <div class="field">
+ <label>Entry method</label>
+ <select id="entry">
+ <option value="TIER1_PWA">Tier-1 — online PWA (PoLK confirmed)</option>
+ <option value="TIER2_OFFLINE">Tier-2 — offline, cluster soft-reserve</option>
+ </select>
+ </div>
+ <div id="quota-live" class="quota-mini"></div>
+ <hr class="hr" />
+ <button class="btn" id="submit" style="width:100%">Submit collection to ledger</button>
+ <div id="result"></div>
+ </div>
 </div>
 <footer class="foot">Presets use the true interior point of each approved NMPB zone polygon, so a
-  legitimate collection lands in-zone. The off-zone button submits a point outside every polygon to
-  show a real <span class="mono">ZONE_VIOLATION</span>. Device GPS is used verbatim when you allow it.</footer>
+ legitimate collection lands in-zone. The off-zone button submits a point outside every polygon to
+ show a real <span class="mono">ZONE_VIOLATION</span>. Device GPS is used verbatim when you allow it.</footer>
 
 <script src="/assets/app.js"></script>
 <script>
@@ -100,171 +100,171 @@ AT.gate('COLLECTOR');
 let SPECIES = [], ZONES = [], override = null; // override = manual/GPS point
 
 function centroid(poly){ // representative interior point of a closed ring
-  let x=0,y=0,n=poly.length-1; // last repeats first
-  for(let i=0;i<n;i++){x+=poly[i][0];y+=poly[i][1];}
-  return { lon:+(x/n).toFixed(4), lat:+(y/n).toFixed(4), altitudeM:850 };
+ let x=0,y=0,n=poly.length-1; // last repeats first
+ for(let i=0;i<n;i++){x+=poly[i][0];y+=poly[i][1];}
+ return { lon:+(x/n).toFixed(4), lat:+(y/n).toFixed(4), altitudeM:850 };
 }
 function currentPoint(){
-  if(override) return override;
-  const z = ZONES.find(z=>z.id===AT.$('#zone').value);
-  return z ? centroid(z.polygon) : null;
+ if(override) return override;
+ const z = ZONES.find(z=>z.id===AT.$('#zone').value);
+ return z ? centroid(z.polygon) : null;
 }
 function renderGps(){
-  const p = currentPoint();
-  AT.$('#gps').textContent = p ? `lat ${p.lat}, lon ${p.lon}${override?' · device/manual':' · zone centroid'}` : '—';
+ const p = currentPoint();
+ AT.$('#gps').textContent = p ? `lat ${p.lat}, lon ${p.lon}${override?' · device/manual':' · zone centroid'}` : '—';
 }
 
 function fillSpeciesDetail(){
-  const s = SPECIES.find(s=>s.code===AT.$('#species').value);
-  const part = AT.$('#part'); part.innerHTML='';
-  (s?.allowedParts||[]).forEach(p=>part.appendChild(AT.el('option',{value:p},p)));
-  part.appendChild(AT.el('option',{value:'LEAF_WRONG'},'LEAF (wrong part — will reject)'));
-  const season = AT.$('#season'); season.innerHTML='';
-  (s?.allowedSeasons||[]).forEach(v=>season.appendChild(AT.el('option',{value:v},v)));
-  season.appendChild(AT.el('option',{value:'MONSOON'},'MONSOON (off-season — will reject)'));
-  loadQuota();
+ const s = SPECIES.find(s=>s.code===AT.$('#species').value);
+ const part = AT.$('#part'); part.innerHTML='';
+ (s?.allowedParts||[]).forEach(p=>part.appendChild(AT.el('option',{value:p},p)));
+ part.appendChild(AT.el('option',{value:'LEAF_WRONG'},'LEAF (wrong part — will reject)'));
+ const season = AT.$('#season'); season.innerHTML='';
+ (s?.allowedSeasons||[]).forEach(v=>season.appendChild(AT.el('option',{value:v},v)));
+ season.appendChild(AT.el('option',{value:'MONSOON'},'MONSOON (off-season — will reject)'));
+ loadQuota();
 }
 async function loadQuota(){
-  const box = AT.$('#quota-live'); box.innerHTML='';
-  const z = AT.$('#zone').value, code = AT.$('#species').value;
-  if(!z||!code) return;
-  try{
-    const q = await AT.get(`/zones/${encodeURIComponent(z)}/quota`);
-    const row = q.quotas.find(x=>x.speciesCode===code);
-    if(!row){ box.innerHTML = `<div class="small muted">No quota set for this species in this zone — collection will be rejected here.</div>`; return; }
-    const pct = Math.min(100, row.consumedPct).toFixed(0);
-    box.innerHTML = `<label>Live quota · ${AT.esc(code)} in ${AT.esc(z.replace('NMPB-KA-',''))}</label>
-      <div class="bar band-${row.band}"><i style="width:${pct}%"></i></div>
-      <div class="small muted" style="margin-top:5px">${row.consumedKg} / ${row.annualLimitKg} kg used · band ${row.band}${row.band==='RED'?' — near cap':''}</div>`;
-  }catch(e){ box.innerHTML = `<div class="small muted">Quota unavailable (${AT.esc(e.code)})</div>`; }
+ const box = AT.$('#quota-live'); box.innerHTML='';
+ const z = AT.$('#zone').value, code = AT.$('#species').value;
+ if(!z||!code) return;
+ try{
+ const q = await AT.get(`/zones/${encodeURIComponent(z)}/quota`);
+ const row = q.quotas.find(x=>x.speciesCode===code);
+ if(!row){ box.innerHTML = `<div class="small muted">No quota set for this species in this zone — collection will be rejected here.</div>`; return; }
+ const pct = Math.min(100, row.consumedPct).toFixed(0);
+ box.innerHTML = `<label>Live quota · ${AT.esc(code)} in ${AT.esc(z.replace('NMPB-KA-',''))}</label>
+ <div class="bar band-${row.band}"><i style="width:${pct}%"></i></div>
+ <div class="small muted" style="margin-top:5px">${row.consumedKg} / ${row.annualLimitKg} kg used · band ${row.band}${row.band==='RED'?' — near cap':''}</div>`;
+ }catch(e){ box.innerHTML = `<div class="small muted">Quota unavailable (${AT.esc(e.code)})</div>`; }
 }
 
 const MK_PASS='<svg class="mk" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#4A8B6F"/><path d="M6 10l2.5 2.5L14 7" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const MK_FAIL='<svg class="mk" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#A8412A"/><path d="M7 7l6 6M13 7l-6 6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
 async function submit(){
-  const btn = AT.$('#submit'); btn.disabled=true; btn.textContent='Submitting to ledger…';
-  const res = AT.$('#result'); res.innerHTML='';
-  const p = currentPoint();
-  const partVal = AT.$('#part').value === 'LEAF_WRONG' ? 'LEAF' : AT.$('#part').value;
-  const seasonVal = AT.$('#season').value;
-  const entry = AT.$('#entry').value;
-  const body = {
-    speciesCode: AT.$('#species').value,
-    quantityKg: Number(AT.$('#qty').value),
-    plantPart: partVal,
-    collectorId: AT.$('#collector').value,
-    season: seasonVal,
-    location: p,
-    entryMethod: entry,
-    photoIpfsCID: 'Qm' + Math.random().toString(36).slice(2,12),
-  };
-  if(entry==='TIER2_OFFLINE') body.offlineSoftReserve = true;
-  try{
-    const d = await AT.post('/events/collection', body);
-    res.innerHTML = `<div class="banner ok">
-      <b>Committed.</b> All five MPR checks passed.
-      <div class="checks">
-        <div class="chk pass">${MK_PASS}<span>Geo-fence · point inside approved zone polygon</span></div>
-        <div class="chk pass">${MK_PASS}<span>Season · within the allowed harvest window</span></div>
-        <div class="chk pass">${MK_PASS}<span>Quota · drew ${AT.esc(body.quantityKg)}kg against remaining allowance</span></div>
-        <div class="chk pass">${MK_PASS}<span>Licence · collector registration active</span></div>
-        <div class="chk pass">${MK_PASS}<span>Plant part · ${AT.esc(partVal)} permitted for this species</span></div>
-      </div>
-      <div style="margin-top:12px" class="small">
-        <div>Lot EPC · <span class="mono">${AT.esc(AT.shortEpc(d.epc))}</span></div>
-        <div>GACP score · <b>${d.gacpScore}</b> / 100 · tx <span class="mono">${AT.esc(d.txId.slice(0,14))}…</span></div>
-      </div>
-      <div style="margin-top:10px"><a href="/consumer.html?epc=${encodeURIComponent(d.epc)}">Trace this lot →</a></div>
-    </div>`;
-    loadQuota();
-  }catch(e){
-    const failMap = {
-      ZONE_VIOLATION:'Geo-fence', SEASON_VIOLATION:'Season', QUOTA_EXCEEDED:'Quota',
-      LICENSE_INVALID:'Licence', PART_VIOLATION:'Plant part',
-    };
-    res.innerHTML = `<div class="banner err">
-      <div class="code">${AT.esc(e.code)}</div>
-      <div>${AT.esc(e.message || 'Rejected by the ledger.')}</div>
-      ${failMap[e.code]?`<div class="hint">Failed check: <b>${failMap[e.code]}</b>. Nothing was committed — the whole transaction rolled back and is attributed to <span class="mono">${AT.esc(body.collectorId)}</span>.</div>`:''}
-      ${e.detail&&Object.keys(e.detail).length?`<div class="hint mono">${AT.esc(JSON.stringify(e.detail))}</div>`:''}
-    </div>`;
-  }finally{ btn.disabled=false; btn.textContent='Submit collection to ledger'; }
+ const btn = AT.$('#submit'); btn.disabled=true; btn.textContent='Submitting to ledger…';
+ const res = AT.$('#result'); res.innerHTML='';
+ const p = currentPoint();
+ const partVal = AT.$('#part').value === 'LEAF_WRONG' ? 'LEAF' : AT.$('#part').value;
+ const seasonVal = AT.$('#season').value;
+ const entry = AT.$('#entry').value;
+ const body = {
+ speciesCode: AT.$('#species').value,
+ quantityKg: Number(AT.$('#qty').value),
+ plantPart: partVal,
+ collectorId: AT.$('#collector').value,
+ season: seasonVal,
+ location: p,
+ entryMethod: entry,
+ photoIpfsCID: 'Qm' + Math.random().toString(36).slice(2,12),
+ };
+ if(entry==='TIER2_OFFLINE') body.offlineSoftReserve = true;
+ try{
+ const d = await AT.post('/events/collection', body);
+ res.innerHTML = `<div class="banner ok">
+ <b>Committed.</b> All five MPR checks passed.
+ <div class="checks">
+ <div class="chk pass">${MK_PASS}<span>Geo-fence · point inside approved zone polygon</span></div>
+ <div class="chk pass">${MK_PASS}<span>Season · within the allowed harvest window</span></div>
+ <div class="chk pass">${MK_PASS}<span>Quota · drew ${AT.esc(body.quantityKg)}kg against remaining allowance</span></div>
+ <div class="chk pass">${MK_PASS}<span>Licence · collector registration active</span></div>
+ <div class="chk pass">${MK_PASS}<span>Plant part · ${AT.esc(partVal)} permitted for this species</span></div>
+ </div>
+ <div style="margin-top:12px" class="small">
+ <div>Lot EPC · <span class="mono">${AT.esc(AT.shortEpc(d.epc))}</span></div>
+ <div>GACP score · <b>${d.gacpScore}</b> / 100 · tx <span class="mono">${AT.esc(d.txId.slice(0,14))}…</span></div>
+ </div>
+ <div style="margin-top:10px"><a href="/consumer.html?epc=${encodeURIComponent(d.epc)}">Trace this lot →</a></div>
+ </div>`;
+ loadQuota();
+ }catch(e){
+ const failMap = {
+ ZONE_VIOLATION:'Geo-fence', SEASON_VIOLATION:'Season', QUOTA_EXCEEDED:'Quota',
+ LICENSE_INVALID:'Licence', PART_VIOLATION:'Plant part',
+ };
+ res.innerHTML = `<div class="banner err">
+ <div class="code">${AT.esc(e.code)}</div>
+ <div>${AT.esc(e.message || 'Rejected by the ledger.')}</div>
+ ${failMap[e.code]?`<div class="hint">Failed check: <b>${failMap[e.code]}</b>. Nothing was committed — the whole transaction rolled back and is attributed to <span class="mono">${AT.esc(body.collectorId)}</span>.</div>`:''}
+ ${e.detail&&Object.keys(e.detail).length?`<div class="hint mono">${AT.esc(JSON.stringify(e.detail))}</div>`:''}
+ </div>`;
+ }finally{ btn.disabled=false; btn.textContent='Submit collection to ledger'; }
 }
 
 (async function init(){
-  try{
-    const [sp, co, zo] = await Promise.all([AT.get('/species'), AT.get('/collectors'), AT.get('/zones')]);
-    SPECIES = sp.species; ZONES = zo.zones;
-    const cs = AT.$('#collector');
-    co.collectors.forEach(c=>cs.appendChild(AT.el('option',{value:c.id}, c.id + (c.licenseActive?'':' — licence EXPIRED'))));
-    cs.addEventListener('change',()=>{
-      const c = co.collectors.find(x=>x.id===cs.value);
-      AT.$('#collector-note').textContent = c ? `Cluster ${c.cluster} · licence ${c.licenseActive?'active to '+c.licenseExpiry:'EXPIRED '+c.licenseExpiry+' — submitting will reject with LICENSE_INVALID'}` : '';
-    });
-    const ss = AT.$('#species');
-    SPECIES.forEach(s=>ss.appendChild(AT.el('option',{value:s.code}, `${s.commonName} (${s.code})${s.endangered?' · endangered':''}`)));
-    const zs = AT.$('#zone');
-    ZONES.forEach(z=>zs.appendChild(AT.el('option',{value:z.id}, z.name)));
-    ss.addEventListener('change', ()=>{override=null; fillSpeciesDetail();});
-    zs.addEventListener('change', ()=>{override=null; renderGps(); loadQuota();});
-    cs.dispatchEvent(new Event('change'));
-    fillSpeciesDetail(); renderGps();
-  }catch(e){
-    AT.$('#result').innerHTML = `<div class="banner err"><div class="code">${AT.esc(e.code||'ERROR')}</div><div>${AT.esc(e.message)}</div></div>`;
-  }
+ try{
+ const [sp, co, zo] = await Promise.all([AT.get('/species'), AT.get('/collectors'), AT.get('/zones')]);
+ SPECIES = sp.species; ZONES = zo.zones;
+ const cs = AT.$('#collector');
+ co.collectors.forEach(c=>cs.appendChild(AT.el('option',{value:c.id}, c.id + (c.licenseActive?'':' — licence EXPIRED'))));
+ cs.addEventListener('change',()=>{
+ const c = co.collectors.find(x=>x.id===cs.value);
+ AT.$('#collector-note').textContent = c ? `Cluster ${c.cluster} · licence ${c.licenseActive?'active to '+c.licenseExpiry:'EXPIRED '+c.licenseExpiry+' — submitting will reject with LICENSE_INVALID'}` : '';
+ });
+ const ss = AT.$('#species');
+ SPECIES.forEach(s=>ss.appendChild(AT.el('option',{value:s.code}, `${s.commonName} (${s.code})${s.endangered?' · endangered':''}`)));
+ const zs = AT.$('#zone');
+ ZONES.forEach(z=>zs.appendChild(AT.el('option',{value:z.id}, z.name)));
+ ss.addEventListener('change', ()=>{override=null; fillSpeciesDetail();});
+ zs.addEventListener('change', ()=>{override=null; renderGps(); loadQuota();});
+ cs.dispatchEvent(new Event('change'));
+ fillSpeciesDetail(); renderGps();
+ }catch(e){
+ AT.$('#result').innerHTML = `<div class="banner err"><div class="code">${AT.esc(e.code||'ERROR')}</div><div>${AT.esc(e.message)}</div></div>`;
+ }
 })();
 
 AT.$('#usegps').addEventListener('click', ()=>{
-  if(!navigator.geolocation){ alert('No geolocation on this device.'); return; }
-  navigator.geolocation.getCurrentPosition(pos=>{
-    override = { lat:+pos.coords.latitude.toFixed(4), lon:+pos.coords.longitude.toFixed(4), altitudeM: Math.round(pos.coords.altitude||0) };
-    renderGps();
-  }, ()=>alert('Location permission denied.'));
+ if(!navigator.geolocation){ alert('No geolocation on this device.'); return; }
+ navigator.geolocation.getCurrentPosition(pos=>{
+ override = { lat:+pos.coords.latitude.toFixed(4), lon:+pos.coords.longitude.toFixed(4), altitudeM: Math.round(pos.coords.altitude||0) };
+ renderGps();
+ }, ()=>alert('Location permission denied.'));
 });
 AT.$('#offzone').addEventListener('click', ()=>{ override = { lat:19.0760, lon:72.8777, altitudeM:14 }; renderGps(); });
 AT.$('#submit').addEventListener('click', submit);
 
 // ---- AI species-from-photo ------------------------------------------------
 (function(){
-  const drop = AT.$('#drop'), imgfile = AT.$('#imgfile'), res = AT.$('#ai-res');
-  const stop = e => { e.preventDefault(); e.stopPropagation(); };
-  ['dragenter','dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev, stop));
-  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, ()=>drop.classList.add('over')));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, ()=>drop.classList.remove('over')));
-  drop.addEventListener('drop', e=> handle(e.dataTransfer.files && e.dataTransfer.files[0]));
-  drop.addEventListener('click', ()=> imgfile.click());
-  imgfile.addEventListener('change', ()=> handle(imgfile.files && imgfile.files[0]));
+ const drop = AT.$('#drop'), imgfile = AT.$('#imgfile'), res = AT.$('#ai-res');
+ const stop = e => { e.preventDefault(); e.stopPropagation(); };
+ ['dragenter','dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev, stop));
+ ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, ()=>drop.classList.add('over')));
+ ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, ()=>drop.classList.remove('over')));
+ drop.addEventListener('drop', e=> handle(e.dataTransfer.files && e.dataTransfer.files[0]));
+ drop.addEventListener('click', ()=> imgfile.click());
+ imgfile.addEventListener('change', ()=> handle(imgfile.files && imgfile.files[0]));
 
-  async function handle(file){
-    if(!file) return;
-    if(!file.type.startsWith('image/')){ res.className='ai-res muted'; res.textContent='Please drop an image file.'; return; }
-    const inner = AT.$('#drop-inner');
-    inner.innerHTML = `<img class="prev" src="${URL.createObjectURL(file)}" alt="preview" />🔍 Identifying species…`;
-    drop.classList.add('busy'); res.className='ai-res muted'; res.textContent='';
-    try{
-      const fd = new FormData(); fd.append('image', file, file.name);
-      const r = await fetch('/species/identify', { method:'POST', body: fd });
-      const j = await r.json();
-      const d = j.data;
-      if(j.ok === false || !d || !d.code){
-        res.className='ai-res muted';
-        res.innerHTML = `Couldn't match a tracked species. ${AT.esc((d&&d.note)||j.message||'')}`;
-      } else {
-        const ss = AT.$('#species'); ss.value = d.code; ss.dispatchEvent(new Event('change'));
-        const pct = Math.round((d.confidence||0)*100);
-        res.className='ai-res';
-        res.innerHTML = `<span class="hit">✓ Recognised ${AT.esc(d.commonName)}</span> `+
-          `<span class="muted">(${AT.esc(d.scientificName||'')} · ${pct}%${d.source==='demo'?' · demo':''})</span> — species selected below.`;
-        // if the collector had declared a different species, flag the mismatch
-      }
-    }catch(e){
-      res.className='ai-res muted'; res.textContent = 'Upload failed: '+(e.message||e);
-    }finally{
-      drop.classList.remove('busy');
-      inner.innerHTML = '📷 Drag &amp; drop a herb photo here, or <u>click to choose</u> — the AI picks the species.';
-    }
-  }
+ async function handle(file){
+ if(!file) return;
+ if(!file.type.startsWith('image/')){ res.className='ai-res muted'; res.textContent='Please drop an image file.'; return; }
+ const inner = AT.$('#drop-inner');
+ inner.innerHTML = `<img class="prev" src="${URL.createObjectURL(file)}" alt="preview" />Identifying species…`;
+ drop.classList.add('busy'); res.className='ai-res muted'; res.textContent='';
+ try{
+ const fd = new FormData(); fd.append('image', file, file.name);
+ const r = await fetch('/species/identify', { method:'POST', body: fd });
+ const j = await r.json();
+ const d = j.data;
+ if(j.ok === false || !d || !d.code){
+ res.className='ai-res muted';
+ res.innerHTML = `Couldn't match a tracked species. ${AT.esc((d&&d.note)||j.message||'')}`;
+ } else {
+ const ss = AT.$('#species'); ss.value = d.code; ss.dispatchEvent(new Event('change'));
+ const pct = Math.round((d.confidence||0)*100);
+ res.className='ai-res';
+ res.innerHTML = `<span class="hit">✓ Recognised ${AT.esc(d.commonName)}</span> `+
+ `<span class="muted">(${AT.esc(d.scientificName||'')} · ${pct}%${d.source==='demo'?' · demo':''})</span> — species selected below.`;
+ // if the collector had declared a different species, flag the mismatch
+ }
+ }catch(e){
+ res.className='ai-res muted'; res.textContent = 'Upload failed: '+(e.message||e);
+ }finally{
+ drop.classList.remove('busy');
+ inner.innerHTML = 'Drag and drop a herb photo, or <u>click to choose</u> — the AI picks the species.';
+ }
+ }
 })();
 </script>
 </body>

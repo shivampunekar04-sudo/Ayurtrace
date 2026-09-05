@@ -6,64 +6,64 @@
 <title>AyurTrace — Lab</title>
 <link rel="stylesheet" href="/assets/theme.css" />
 <style>
-  .ai-drop{border:2px dashed #bcd6c6;border-radius:11px;background:var(--paper);
-    padding:18px;text-align:center;cursor:pointer;transition:.15s;color:var(--ink-soft);font-size:13px}
-  .ai-drop:hover,.ai-drop.over{border-color:var(--leaf);background:var(--leaf-tint);color:var(--ink)}
-  .ai-drop.busy{opacity:.7;pointer-events:none}
-  table.metrics{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
-  table.metrics th,table.metrics td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left}
-  table.metrics input{width:90px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:#f3f1ea;color:var(--ink)}
-  .b-pass{color:var(--leaf);font-weight:600}.b-fail{color:var(--clay);font-weight:600}
-  .note{font-size:12px;color:var(--ink-soft);margin-top:6px}
-  .lockmsg{background:var(--leaf-tint);border:1px solid #bcd6c6;border-radius:9px;padding:9px 12px;font-size:12.5px;margin-top:10px}
+ .ai-drop{border:2px dashed #bcd6c6;border-radius:11px;background:var(--paper);
+ padding:18px;text-align:center;cursor:pointer;transition:.15s;color:var(--ink-soft);font-size:13px}
+ .ai-drop:hover,.ai-drop.over{border-color:var(--leaf);background:var(--leaf-tint);color:var(--ink)}
+ .ai-drop.busy{opacity:.7;pointer-events:none}
+ table.metrics{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+ table.metrics th,table.metrics td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left}
+ table.metrics input{width:90px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:#f3f1ea;color:var(--ink)}
+ .b-pass{color:var(--leaf);font-weight:600}.b-fail{color:var(--clay);font-weight:600}
+ .note{font-size:12px;color:var(--ink-soft);margin-top:6px}
+ .lockmsg{background:var(--leaf-tint);border:1px solid #bcd6c6;border-radius:9px;padding:9px 12px;font-size:12.5px;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="wrap narrow">
-  <h1 class="page-h">Lab quality test</h1>
-  <p class="page-sub">Upload the official Certificate of Analysis — the values are read straight from the
-    document, not typed. A test also needs an <b>independent verifier</b> to co-sign.
-    <span class="chip">🟢 BUILT</span></p>
+ <h1 class="page-h">Lab quality test</h1>
+ <p class="page-sub">Upload the official Certificate of Analysis — the values are read straight from the
+ document, not typed. A test also needs an <b>independent verifier</b> to co-sign.
+ <span class="chip">BUILT</span></p>
 
-  <div class="card">
-    <div class="field">
-      <label>Certificate of Analysis <span class="chip">AI extract</span></label>
-      <div id="drop" class="ai-drop">
-        <input id="docfile" type="file" accept=".txt,.csv,.md,.json,.pdf,text/*" hidden />
-        <div id="drop-inner">📄 Drag &amp; drop the lab report here, or <u>click to choose</u> — values auto-fill.</div>
-      </div>
-      <div id="ex-note" class="note"></div>
-    </div>
+ <div class="card">
+ <div class="field">
+ <label>Certificate of Analysis <span class="chip">AI extract</span></label>
+ <div id="drop" class="ai-drop">
+ <input id="docfile" type="file" accept=".txt,.csv,.md,.json,.pdf,text/*" hidden />
+ <div id="drop-inner">Drag and drop the lab report, or <u>click to choose</u> — values auto-fill.</div>
+ </div>
+ <div id="ex-note" class="note"></div>
+ </div>
 
-    <div class="field"><label>Batch / Sample EPC <span class="muted" style="font-weight:400">(select the batch you tested)</span></label>
-      <select id="epc"></select></div>
+ <div class="field"><label>Batch / Sample EPC <span class="muted" style="font-weight:400">(select the batch you tested)</span></label>
+ <select id="epc"></select></div>
 
-    <label>Test results <span class="muted" style="font-weight:400">(read-only — filled from the certificate)</span></label>
-    <table class="metrics">
-      <thead><tr><th>Parameter</th><th>Result</th><th>Unit</th><th>Limit</th><th>Status</th></tr></thead>
-      <tbody id="metrics"></tbody>
-    </table>
-    <div class="lockmsg">🔒 The analyst can't retype these — they come only from the uploaded certificate.
-      Change the document, not the number.</div>
+ <label>Test results <span class="muted" style="font-weight:400">(read-only — filled from the certificate)</span></label>
+ <table class="metrics">
+ <thead><tr><th>Parameter</th><th>Result</th><th>Unit</th><th>Limit</th><th>Status</th></tr></thead>
+ <tbody id="metrics"></tbody>
+ </table>
+ <div class="lockmsg">The analyst can't retype these — they come only from the uploaded certificate.
+ Change the document, not the number.</div>
 
-    <div class="row" style="margin-top:14px">
-      <div class="field"><label>Testing Lab (MSP)</label><input id="labmsp" value="LabMSP" /></div>
-      <div class="field"><label>Independent verifier (MSP)</label><input id="vermsp" value="RegulatorMSP" /></div>
-    </div>
-    <div class="field">
-      <label>Verifier role</label>
-      <select id="verrole"><option value="REGULATOR">Regulator (NMPB) — independent</option>
-        <option value="SECOND_LAB">Second accredited lab</option></select>
-    </div>
-    <div class="field"><label>Lab report IPFS CID</label><input id="ipfs" placeholder="Qm…" /></div>
+ <div class="row" style="margin-top:14px">
+ <div class="field"><label>Testing Lab (MSP)</label><input id="labmsp" value="LabMSP" /></div>
+ <div class="field"><label>Independent verifier (MSP)</label><input id="vermsp" value="RegulatorMSP" /></div>
+ </div>
+ <div class="field">
+ <label>Verifier role</label>
+ <select id="verrole"><option value="REGULATOR">Regulator (NMPB) — independent</option>
+ <option value="SECOND_LAB">Second accredited lab</option></select>
+ </div>
+ <div class="field"><label>Lab report IPFS CID</label><input id="ipfs" placeholder="Qm…" /></div>
 
-    <hr class="hr" />
-    <button class="btn" id="submit" style="width:100%">Submit quality test to ledger</button>
-    <div id="result"></div>
-  </div>
-  <footer class="foot">The quality-test endorsement policy requires the Lab <b>and</b> an independent
-    Regulator to both sign — a lab can never pass its own sample. Download the sample report
-    <a href="/sample-lab-report.txt" download>here</a> and drop it into the box above.</footer>
+ <hr class="hr" />
+ <button class="btn" id="submit" style="width:100%">Submit quality test to ledger</button>
+ <div id="result"></div>
+ </div>
+ <footer class="foot">The quality-test endorsement policy requires the Lab <b>and</b> an independent
+ Regulator to both sign — a lab can never pass its own sample. Download the sample report
+ <a href="/sample-lab-report.txt" download>here</a> and drop it into the box above.</footer>
 </div>
 
 <script src="/assets/app.js"></script>
@@ -75,79 +75,79 @@ const METRIC_ROWS = ['moisture','lead','arsenic','mercury','cadmium','pesticide'
 let METRICS = {}; // name -> {value,unit,limit,withinLimit}
 
 function renderMetrics(){
-  const body = AT.$('#metrics'); body.innerHTML='';
-  METRIC_ROWS.forEach(n=>{
-    const m = METRICS[n];
-    const tr = AT.el('tr');
-    tr.innerHTML = `<td style="text-transform:capitalize">${n}</td>
-      <td><input value="${m?AT.esc(m.value):''}" readonly /></td>
-      <td>${m?AT.esc(m.unit):'—'}</td>
-      <td>${m?AT.esc(m.limit):'—'}</td>
-      <td>${m?(m.withinLimit?'<span class="b-pass">PASS</span>':'<span class="b-fail">FAIL</span>'):'—'}</td>`;
-    body.appendChild(tr);
-  });
+ const body = AT.$('#metrics'); body.innerHTML='';
+ METRIC_ROWS.forEach(n=>{
+ const m = METRICS[n];
+ const tr = AT.el('tr');
+ tr.innerHTML = `<td style="text-transform:capitalize">${n}</td>
+ <td><input value="${m?AT.esc(m.value):''}" readonly /></td>
+ <td>${m?AT.esc(m.unit):'—'}</td>
+ <td>${m?AT.esc(m.limit):'—'}</td>
+ <td>${m?(m.withinLimit?'<span class="b-pass">PASS</span>':'<span class="b-fail">FAIL</span>'):'—'}</td>`;
+ body.appendChild(tr);
+ });
 }
 renderMetrics();
 
 // load real batches into the EPC dropdown so the submit commits on a live batch
 (async function loadBatches(){
-  try{
-    const d = await AT.get('/batches');
-    const sel = AT.$('#epc'); sel.innerHTML='';
-    const batches = (d.batches||[]);
-    if(!batches.length){ sel.appendChild(AT.el('option',{value:''},'No batches yet — a collector must log one first')); return; }
-    batches.forEach(b=>sel.appendChild(AT.el('option',{value:b.epc}, `${AT.shortEpc(b.epc)} · ${b.speciesCode}`)));
-  }catch(_){ /* gateway pollHealth surfaces down state */ }
+ try{
+ const d = await AT.get('/batches');
+ const sel = AT.$('#epc'); sel.innerHTML='';
+ const batches = (d.batches||[]);
+ if(!batches.length){ sel.appendChild(AT.el('option',{value:''},'No batches yet — a collector must log one first')); return; }
+ batches.forEach(b=>sel.appendChild(AT.el('option',{value:b.epc}, `${AT.shortEpc(b.epc)} · ${b.speciesCode}`)));
+ }catch(_){ /* gateway pollHealth surfaces down state */ }
 })();
 
 // ---- drag-drop certificate → auto-fill ----
 (function(){
-  const drop=AT.$('#drop'), docfile=AT.$('#docfile'), note=AT.$('#ex-note');
-  const stop=e=>{e.preventDefault();e.stopPropagation();};
-  ['dragenter','dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev,stop));
-  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.add('over')));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('over')));
-  drop.addEventListener('drop',e=>handle(e.dataTransfer.files&&e.dataTransfer.files[0]));
-  drop.addEventListener('click',()=>docfile.click());
-  docfile.addEventListener('change',()=>handle(docfile.files&&docfile.files[0]));
-  async function handle(file){
-    if(!file) return;
-    note.textContent='📤 Reading certificate…'; drop.classList.add('busy');
-    try{
-      const fd=new FormData(); fd.append('doc',file,file.name);
-      const r=await fetch('/lab/extract',{method:'POST',body:fd});
-      const j=await r.json(); const d=j.data;
-      if(j.ok===false||!d){ note.textContent=j.message||'Could not read the document.'; return; }
-      METRICS={}; (d.metrics||[]).forEach(m=>METRICS[m.name]=m); renderMetrics();
-      if(d.testingLabMsp) AT.$('#labmsp').value=d.testingLabMsp;
-      if(d.verifierMsp) AT.$('#vermsp').value=d.verifierMsp;
-      if(d.ipfsCID) AT.$('#ipfs').value=d.ipfsCID;
-      note.innerHTML=`<span class="b-pass">✓ ${AT.esc(d.note||'Extracted.')}</span>`+
-        (d.species?` · Species: ${AT.esc(d.species)}`:'')+(d.overall?` · Overall: ${AT.esc(d.overall)}`:'');
-    }catch(e){ note.textContent='Read failed: '+(e.message||e); }
-    finally{ drop.classList.remove('busy'); AT.$('#drop-inner').innerHTML='📄 Drag &amp; drop the lab report here, or <u>click to choose</u> — values auto-fill.'; }
-  }
+ const drop=AT.$('#drop'), docfile=AT.$('#docfile'), note=AT.$('#ex-note');
+ const stop=e=>{e.preventDefault();e.stopPropagation();};
+ ['dragenter','dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev,stop));
+ ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.add('over')));
+ ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('over')));
+ drop.addEventListener('drop',e=>handle(e.dataTransfer.files&&e.dataTransfer.files[0]));
+ drop.addEventListener('click',()=>docfile.click());
+ docfile.addEventListener('change',()=>handle(docfile.files&&docfile.files[0]));
+ async function handle(file){
+ if(!file) return;
+ note.textContent='Reading certificate…'; drop.classList.add('busy');
+ try{
+ const fd=new FormData(); fd.append('doc',file,file.name);
+ const r=await fetch('/lab/extract',{method:'POST',body:fd});
+ const j=await r.json(); const d=j.data;
+ if(j.ok===false||!d){ note.textContent=j.message||'Could not read the document.'; return; }
+ METRICS={}; (d.metrics||[]).forEach(m=>METRICS[m.name]=m); renderMetrics();
+ if(d.testingLabMsp) AT.$('#labmsp').value=d.testingLabMsp;
+ if(d.verifierMsp) AT.$('#vermsp').value=d.verifierMsp;
+ if(d.ipfsCID) AT.$('#ipfs').value=d.ipfsCID;
+ note.innerHTML=`<span class="b-pass">✓ ${AT.esc(d.note||'Extracted.')}</span>`+
+ (d.species?` · Species: ${AT.esc(d.species)}`:'')+(d.overall?` · Overall: ${AT.esc(d.overall)}`:'');
+ }catch(e){ note.textContent='Read failed: '+(e.message||e); }
+ finally{ drop.classList.remove('busy'); AT.$('#drop-inner').innerHTML='Drag and drop the lab report, or <u>click to choose</u> — values auto-fill.'; }
+ }
 })();
 
 async function submit(){
-  const btn=AT.$('#submit'); btn.disabled=true; btn.textContent='Submitting to ledger…';
-  const metrics=METRIC_ROWS.filter(n=>METRICS[n]).map(n=>({name:n,...METRICS[n]}));
-  const req={
-    epc:AT.$('#epc').value.trim(),
-    metrics,
-    ipfsCID:AT.$('#ipfs').value.trim()||'QmNoCID',
-    testingLabMsp:AT.$('#labmsp').value.trim(),
-    verifierMsp:AT.$('#vermsp').value.trim(),
-    verifierRole:AT.$('#verrole').value,
-  };
-  const out=AT.$('#result');
-  if(!req.epc||!metrics.length){ out.innerHTML='<div class="banner err"><div>Upload a certificate first (need EPC + values).</div></div>'; btn.disabled=false; btn.textContent='Submit quality test to ledger'; return; }
-  try{
-    const d=await AT.post('/events/quality-test',req);
-    out.innerHTML=`<div class="banner ok"><div class="code">COMMITTED</div><div>Result: <b>${AT.esc(d.result||'PASS')}</b> · tx ${AT.esc((d.txId||'').slice(0,16))}…</div></div>`;
-  }catch(e){
-    out.innerHTML=`<div class="banner err"><div class="code">${AT.esc(e.code||'ERROR')}</div><div>${AT.esc(e.message)}</div></div>`;
-  }finally{ btn.disabled=false; btn.textContent='Submit quality test to ledger'; }
+ const btn=AT.$('#submit'); btn.disabled=true; btn.textContent='Submitting to ledger…';
+ const metrics=METRIC_ROWS.filter(n=>METRICS[n]).map(n=>({name:n,...METRICS[n]}));
+ const req={
+ epc:AT.$('#epc').value.trim(),
+ metrics,
+ ipfsCID:AT.$('#ipfs').value.trim()||'QmNoCID',
+ testingLabMsp:AT.$('#labmsp').value.trim(),
+ verifierMsp:AT.$('#vermsp').value.trim(),
+ verifierRole:AT.$('#verrole').value,
+ };
+ const out=AT.$('#result');
+ if(!req.epc||!metrics.length){ out.innerHTML='<div class="banner err"><div>Upload a certificate first (need EPC + values).</div></div>'; btn.disabled=false; btn.textContent='Submit quality test to ledger'; return; }
+ try{
+ const d=await AT.post('/events/quality-test',req);
+ out.innerHTML=`<div class="banner ok"><div class="code">COMMITTED</div><div>Result: <b>${AT.esc(d.result||'PASS')}</b> · tx ${AT.esc((d.txId||'').slice(0,16))}…</div></div>`;
+ }catch(e){
+ out.innerHTML=`<div class="banner err"><div class="code">${AT.esc(e.code||'ERROR')}</div><div>${AT.esc(e.message)}</div></div>`;
+ }finally{ btn.disabled=false; btn.textContent='Submit quality test to ledger'; }
 }
 AT.$('#submit').addEventListener('click',submit);
 </script>

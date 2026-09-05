@@ -7,141 +7,141 @@
 <title>AyurTrace — Supply chain</title>
 <link rel="stylesheet" href="/assets/theme.css" />
 <style>
-  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
-  .tabs button{background:var(--white);border:1px solid var(--line);color:var(--ink-soft);padding:9px 14px;font-size:13px}
-  .tabs button.on{background:var(--forest);color:var(--white);border-color:var(--forest)}
-  .pane{display:none} .pane.on{display:block}
-  .picker{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:10px}
-  .pick{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--paper-2)}
-  .pick:last-child{border-bottom:0}
-  .pick input[type=checkbox]{width:auto}
-  .pick .epc{font-family:var(--mono);font-size:12px;flex:1;min-width:0}
-  .pick .kg{width:88px}
-  .pick.dim{opacity:.5}
-  .hintline{font-size:12px;color:var(--ink-soft);margin:2px 0 12px}
-  .qr{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px}
-  .qr canvas,.qr .qrimg{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
-  #scan-hint{color:var(--ink-soft)} #scan-hint b{color:var(--forest)}
-  #scan-hint.warn{color:#8a5a1a}
-  .unit{font-family:var(--mono);font-size:11px;word-break:break-all;background:var(--paper);
-    border:1px solid var(--line);border-radius:8px;padding:8px}
+ .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+ .tabs button{background:var(--white);border:1px solid var(--line);color:var(--ink-soft);padding:9px 14px;font-size:13px}
+ .tabs button.on{background:var(--forest);color:var(--white);border-color:var(--forest)}
+ .pane{display:none} .pane.on{display:block}
+ .picker{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+ .pick{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--paper-2)}
+ .pick:last-child{border-bottom:0}
+ .pick input[type=checkbox]{width:auto}
+ .pick .epc{font-family:var(--mono);font-size:12px;flex:1;min-width:0}
+ .pick .kg{width:88px}
+ .pick.dim{opacity:.5}
+ .hintline{font-size:12px;color:var(--ink-soft);margin:2px 0 12px}
+ .qr{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px}
+ .qr canvas,.qr .qrimg{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+ #scan-hint{color:var(--ink-soft)} #scan-hint b{color:var(--forest)}
+ #scan-hint.warn{color:#8a5a1a}
+ .unit{font-family:var(--mono);font-size:11px;word-break:break-all;background:var(--paper);
+ border:1px solid var(--line);border-radius:8px;padding:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1 class="page-h">Supply-chain console</h1>
-  <p class="page-sub">The mid-chain actors — aggregator, processor, accredited lab, GMP manufacturer.
-    Each action writes a real EPCIS 2.0 event and is gated by chaincode: weight variance, mass balance,
-    incentive-independent endorsement, and the CP-7 all-inputs-passed formulation gate.</p>
+ <h1 class="page-h">Supply-chain console</h1>
+ <p class="page-sub">The mid-chain actors — aggregator, processor, accredited lab, GMP manufacturer.
+ Each action writes a real EPCIS 2.0 event and is gated by chaincode: weight variance, mass balance,
+ incentive-independent endorsement, and the CP-7 all-inputs-passed formulation gate.</p>
 
-  <div class="tabs">
-    <button data-tab="agg" class="on">⚖️ Aggregate + weigh</button>
-    <button data-tab="merge">🔀 Merge / process</button>
-    <button data-tab="lab">🧪 Lab test</button>
-    <button data-tab="form">🏭 Formulate</button>
-    <button data-tab="qr">🏷️ Product QR</button>
-  </div>
+ <div class="tabs">
+ <button data-tab="agg" class="on"> Aggregate + weigh</button>
+ <button data-tab="merge"> Merge / process</button>
+ <button data-tab="lab"> Lab test</button>
+ <button data-tab="form"> Formulate</button>
+ <button data-tab="qr"> Product QR</button>
+ </div>
 
-  <!-- AGGREGATION -->
-  <div class="pane on" id="pane-agg">
-    <div class="card">
-      <h3>Aggregate collected lots &amp; re-weigh (CP-3)</h3>
-      <div class="lede">Pick incoming lots; the IoT weighbridge check holds the batch if measured vs declared weight varies &gt; ±10%. <span class="chip" style="background:var(--amber-tint);color:#8a5a1a">🟡 weigh input</span></div>
-      <div class="picker" id="agg-pick"></div>
-      <div class="row" style="margin-top:12px">
-        <div class="field"><label>Declared weight (kg)</label><input id="agg-decl" type="number" value="90" /></div>
-        <div class="field"><label>Measured weight (kg)</label><input id="agg-meas" type="number" value="88" /></div>
-      </div>
-      <div class="field"><label>Aggregation zone</label><select id="agg-zone"></select></div>
-      <button class="btn" id="agg-go">Submit aggregation</button>
-      <div id="agg-res"></div>
-    </div>
-  </div>
+ <!-- AGGREGATION -->
+ <div class="pane on" id="pane-agg">
+ <div class="card">
+ <h3>Aggregate collected lots &amp; re-weigh (CP-3)</h3>
+ <div class="lede">Pick incoming lots; the IoT weighbridge check holds the batch if measured vs declared weight varies &gt; ±10%. <span class="chip" style="background:var(--amber-tint);color:#8a5a1a"> weigh input</span></div>
+ <div class="picker" id="agg-pick"></div>
+ <div class="row" style="margin-top:12px">
+ <div class="field"><label>Declared weight (kg)</label><input id="agg-decl" type="number" value="90" /></div>
+ <div class="field"><label>Measured weight (kg)</label><input id="agg-meas" type="number" value="88" /></div>
+ </div>
+ <div class="field"><label>Aggregation zone</label><select id="agg-zone"></select></div>
+ <button class="btn" id="agg-go">Submit aggregation</button>
+ <div id="agg-res"></div>
+ </div>
+ </div>
 
-  <!-- MERGE -->
-  <div class="pane" id="pane-merge">
-    <div class="card">
-      <h3>Merge N lots → 1 output (mass balance)</h3>
-      <div class="lede">The mixing problem, solved: Σ(inputs)×(1−loss) must equal the output ±5%, or the batch is held for <span class="mono">MASS_BALANCE_VIOLATION</span>. Every output keeps traceable links to all inputs with proportions.</div>
-      <div class="picker" id="merge-pick"></div>
-      <div class="hintline">Tick the lots to combine and set the kg drawn from each.</div>
-      <div class="row">
-        <div class="field"><label>Output weight (kg)</label><input id="merge-out" type="number" value="81" /></div>
-        <div class="field"><label>Declared loss factor (0–1)</label><input id="merge-loss" type="number" step="0.01" value="0.1" /></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Process zone</label><select id="merge-zone"></select></div>
-        <div class="field"><label>Drying gap (seconds, CP-4)</label><input id="merge-dry" type="number" value="3600" /></div>
-      </div>
-      <button class="btn" id="merge-go">Submit transformation</button>
-      <div id="merge-res"></div>
-    </div>
-  </div>
+ <!-- MERGE -->
+ <div class="pane" id="pane-merge">
+ <div class="card">
+ <h3>Merge N lots → 1 output (mass balance)</h3>
+ <div class="lede">The mixing problem, solved: Σ(inputs)×(1−loss) must equal the output ±5%, or the batch is held for <span class="mono">MASS_BALANCE_VIOLATION</span>. Every output keeps traceable links to all inputs with proportions.</div>
+ <div class="picker" id="merge-pick"></div>
+ <div class="hintline">Tick the lots to combine and set the kg drawn from each.</div>
+ <div class="row">
+ <div class="field"><label>Output weight (kg)</label><input id="merge-out" type="number" value="81" /></div>
+ <div class="field"><label>Declared loss factor (0–1)</label><input id="merge-loss" type="number" step="0.01" value="0.1" /></div>
+ </div>
+ <div class="row">
+ <div class="field"><label>Process zone</label><select id="merge-zone"></select></div>
+ <div class="field"><label>Drying gap (seconds, CP-4)</label><input id="merge-dry" type="number" value="3600" /></div>
+ </div>
+ <button class="btn" id="merge-go">Submit transformation</button>
+ <div id="merge-res"></div>
+ </div>
+ </div>
 
-  <!-- LAB -->
-  <div class="pane" id="pane-lab">
-    <div class="card">
-      <h3>Quality test — dual-endorsed (CP-5 / CP-6)</h3>
-      <div class="lede">Requires the testing lab plus an <b>incentive-independent</b> second signer (NMPB regulator, or a second lab for exports). The manufacturer can never self-endorse a pass.</div>
-      <div class="field"><label>Batch to test</label><select id="lab-batch"></select></div>
-      <div class="row">
-        <div class="field"><label>Lead (ppm, limit 10)</label><input id="lab-lead" type="number" value="1.2" /></div>
-        <div class="field"><label>Moisture (%, limit 12)</label><input id="lab-moist" type="number" value="8" /></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>DNA declared species</label><input id="lab-dna-d" value="Withania somnifera" /></div>
-        <div class="field"><label>DNA confirmed species</label><input id="lab-dna-c" value="Withania somnifera" /></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Testing lab MSP</label><input id="lab-lab" value="LabMSP" /></div>
-        <div class="field"><label>Independent verifier</label>
-          <select id="lab-ver">
-            <option value="NmpbMSP|REGULATOR">NMPB regulator (independent)</option>
-            <option value="Lab2MSP|SECOND_LAB">Second accredited lab (exports)</option>
-            <option value="LabMSP|SECOND_LAB">Same lab twice (will reject)</option>
-            <option value="ManufacturerMSP|REGULATOR">Manufacturer (will reject)</option>
-          </select>
-        </div>
-      </div>
-      <div class="field">
-        <label>Lab certificate (optional — pinned to IPFS, CID anchored on-chain)</label>
-        <input id="lab-cert" type="file" accept="application/pdf,image/*" />
-        <div class="small muted" id="ipfs-note" style="margin-top:5px"></div>
-      </div>
-      <button class="btn" id="lab-go">Submit quality test</button>
-      <div id="lab-res"></div>
-    </div>
-  </div>
+ <!-- LAB -->
+ <div class="pane" id="pane-lab">
+ <div class="card">
+ <h3>Quality test — dual-endorsed (CP-5 / CP-6)</h3>
+ <div class="lede">Requires the testing lab plus an <b>incentive-independent</b> second signer (NMPB regulator, or a second lab for exports). The manufacturer can never self-endorse a pass.</div>
+ <div class="field"><label>Batch to test</label><select id="lab-batch"></select></div>
+ <div class="row">
+ <div class="field"><label>Lead (ppm, limit 10)</label><input id="lab-lead" type="number" value="1.2" /></div>
+ <div class="field"><label>Moisture (%, limit 12)</label><input id="lab-moist" type="number" value="8" /></div>
+ </div>
+ <div class="row">
+ <div class="field"><label>DNA declared species</label><input id="lab-dna-d" value="Withania somnifera" /></div>
+ <div class="field"><label>DNA confirmed species</label><input id="lab-dna-c" value="Withania somnifera" /></div>
+ </div>
+ <div class="row">
+ <div class="field"><label>Testing lab MSP</label><input id="lab-lab" value="LabMSP" /></div>
+ <div class="field"><label>Independent verifier</label>
+ <select id="lab-ver">
+ <option value="NmpbMSP|REGULATOR">NMPB regulator (independent)</option>
+ <option value="Lab2MSP|SECOND_LAB">Second accredited lab (exports)</option>
+ <option value="LabMSP|SECOND_LAB">Same lab twice (will reject)</option>
+ <option value="ManufacturerMSP|REGULATOR">Manufacturer (will reject)</option>
+ </select>
+ </div>
+ </div>
+ <div class="field">
+ <label>Lab certificate (optional — pinned to IPFS, CID anchored on-chain)</label>
+ <input id="lab-cert" type="file" accept="application/pdf,image/*" />
+ <div class="small muted" id="ipfs-note" style="margin-top:5px"></div>
+ </div>
+ <button class="btn" id="lab-go">Submit quality test</button>
+ <div id="lab-res"></div>
+ </div>
+ </div>
 
-  <!-- FORMULATION -->
-  <div class="pane" id="pane-form">
-    <div class="card">
-      <h3>Formulate into product + mint signed QR (CP-7)</h3>
-      <div class="lede">Formulation only proceeds if <b>every input is COMPLETE_PASSED</b>. Each unit gets an ed25519-signed QR token — a copied or edited QR fails signature verification.</div>
-      <div class="picker" id="form-pick"></div>
-      <div class="hintline">Only passed batches can be selected.</div>
-      <div class="row">
-        <div class="field"><label>Product name</label><input id="form-name" value="Ashwagandha Root Churna 60g" /></div>
-        <div class="field"><label>Units to mint</label><input id="form-units" type="number" value="3" min="1" /></div>
-      </div>
-      <div class="field"><label>Manufacturer MSP</label><input id="form-mfr" value="ManufacturerMSP" /></div>
-      <button class="btn" id="form-go">Formulate + mint</button>
-      <div id="form-res"></div>
-    </div>
-  </div>
+ <!-- FORMULATION -->
+ <div class="pane" id="pane-form">
+ <div class="card">
+ <h3>Formulate into product + mint signed QR (CP-7)</h3>
+ <div class="lede">Formulation only proceeds if <b>every input is COMPLETE_PASSED</b>. Each unit gets an ed25519-signed QR token — a copied or edited QR fails signature verification.</div>
+ <div class="picker" id="form-pick"></div>
+ <div class="hintline">Only passed batches can be selected.</div>
+ <div class="row">
+ <div class="field"><label>Product name</label><input id="form-name" value="Ashwagandha Root Churna 60g" /></div>
+ <div class="field"><label>Units to mint</label><input id="form-units" type="number" value="3" min="1" /></div>
+ </div>
+ <div class="field"><label>Manufacturer MSP</label><input id="form-mfr" value="ManufacturerMSP" /></div>
+ <button class="btn" id="form-go">Formulate + mint</button>
+ <div id="form-res"></div>
+ </div>
+ </div>
 
-  <!-- PRODUCT QR -->
-  <div class="pane" id="pane-qr">
-    <div class="card">
-      <h3>Generate a product QR label</h3>
-      <div class="lede">Every finished product — all seven checkpoints passed — can produce its consumer QR here. Display it on screen for a judge to scan, or download it to print on the pack.</div>
-      <div class="picker" id="qr-list"></div>
-      <div id="qr-out"></div>
-    </div>
-  </div>
+ <!-- PRODUCT QR -->
+ <div class="pane" id="pane-qr">
+ <div class="card">
+ <h3>Generate a product QR label</h3>
+ <div class="lede">Every finished product — all seven checkpoints passed — can produce its consumer QR here. Display it on screen for a judge to scan, or download it to print on the pack.</div>
+ <div class="picker" id="qr-list"></div>
+ <div id="qr-out"></div>
+ </div>
+ </div>
 </div>
 <footer class="foot">Every event here is committed to the same ledger the collector and regulator read.
-  Refresh the regulator dashboard after each step to watch the batch advance.</footer>
+ Refresh the regulator dashboard after each step to watch the batch advance.</footer>
 
 <script src="/assets/app.js"></script>
 <script>
@@ -149,190 +149,190 @@ AT.chrome('Supply chain · operators', '/operator.html');
 let BATCHES=[], ZONES=[];
 
 function fileToB64(file){
-  return new Promise((resolve, reject)=>{
-    const r = new FileReader();
-    r.onload = ()=> resolve(String(r.result).split(',')[1] || '');
-    r.onerror = ()=> reject(new Error('file read failed'));
-    r.readAsDataURL(file);
-  });
+ return new Promise((resolve, reject)=>{
+ const r = new FileReader();
+ r.onload = ()=> resolve(String(r.result).split(',')[1] || '');
+ r.onerror = ()=> reject(new Error('file read failed'));
+ r.readAsDataURL(file);
+ });
 }
 
 // Tell the operator whether a phone can actually scan the QR (localhost is not phone-reachable).
 async function showScanHint(){
-  const el = document.getElementById('scan-hint'); if(!el) return;
-  const onLocalhost = /^(localhost|127\.|\[::1\])/.test(location.hostname);
-  if(!onLocalhost){
-    el.className=''; el.innerHTML = `📱 A phone on the same Wi-Fi can scan it now — it points to <b>${AT.esc(location.host)}</b>.`;
-    return;
-  }
-  let lan = '';
-  try{ const d = await AT.get('/net'); lan = (d.lanUrls&&d.lanUrls[0])||''; }catch(_){}
-  el.className='warn';
-  el.innerHTML = lan
-    ? `⚠ This QR points to <b>localhost</b>, which a phone can't open. Re-open the dashboard at <b>${AT.esc(lan)}/operator.html</b> (same Wi-Fi), then formulate again — the QR will point there and your phone can scan it.`
-    : `⚠ This QR points to localhost, which a phone can't open. Open the dashboard via your laptop's LAN IP (same Wi-Fi) so the QR is phone-reachable.`;
+ const el = document.getElementById('scan-hint'); if(!el) return;
+ const onLocalhost = /^(localhost|127\.|\[::1\])/.test(location.hostname);
+ if(!onLocalhost){
+ el.className=''; el.innerHTML = ` A phone on the same Wi-Fi can scan it now — it points to <b>${AT.esc(location.host)}</b>.`;
+ return;
+ }
+ let lan = '';
+ try{ const d = await AT.get('/net'); lan = (d.lanUrls&&d.lanUrls[0])||''; }catch(_){}
+ el.className='warn';
+ el.innerHTML = lan
+ ? ` This QR points to <b>localhost</b>, which a phone can't open. Re-open the dashboard at <b>${AT.esc(lan)}/operator.html</b> (same Wi-Fi), then formulate again — the QR will point there and your phone can scan it.`
+ : ` This QR points to localhost, which a phone can't open. Open the dashboard via your laptop's LAN IP (same Wi-Fi) so the QR is phone-reachable.`;
 }
 
 async function refresh(){
-  try{
-    const [b, z] = await Promise.all([AT.get('/batches'), AT.get('/zones')]);
-    BATCHES = b.batches; ZONES = z.zones;
-    fillZones(); renderPickers(); renderQrList();
-  }catch(e){ /* health pill already shows offline */ }
+ try{
+ const [b, z] = await Promise.all([AT.get('/batches'), AT.get('/zones')]);
+ BATCHES = b.batches; ZONES = z.zones;
+ fillZones(); renderPickers(); renderQrList();
+ }catch(e){ /* health pill already shows offline */ }
 }
 function fillZones(){
-  for(const id of ['agg-zone','merge-zone']){
-    const s=AT.$('#'+id); const cur=s.value; s.innerHTML='';
-    ZONES.forEach(z=>s.appendChild(AT.el('option',{value:z.id},z.name)));
-    if(cur) s.value=cur;
-  }
+ for(const id of ['agg-zone','merge-zone']){
+ const s=AT.$('#'+id); const cur=s.value; s.innerHTML='';
+ ZONES.forEach(z=>s.appendChild(AT.el('option',{value:z.id},z.name)));
+ if(cur) s.value=cur;
+ }
 }
 function isLot(b){ return b.epc.includes(':lot:'); }
 function isMixable(b){ return b.epc.includes(':lot:')||b.epc.includes('output:MERGE')||b.epc.includes('output:PROCESS'); }
 function rowHtml(b, withKg){
-  return `<label class="pick" data-epc="${AT.esc(b.epc)}">
-    <input type="checkbox" />
-    <span class="epc">${AT.esc(AT.shortEpc(b.epc))}</span>
-    ${AT.statusBadge(b.status)}
-    <span class="small muted">${AT.esc(b.speciesCode)} · ${b.gacpScore}</span>
-    ${withKg?'<input class="kg" type="number" placeholder="kg" />':''}
-  </label>`;
+ return `<label class="pick" data-epc="${AT.esc(b.epc)}">
+ <input type="checkbox" />
+ <span class="epc">${AT.esc(AT.shortEpc(b.epc))}</span>
+ ${AT.statusBadge(b.status)}
+ <span class="small muted">${AT.esc(b.speciesCode)} · ${b.gacpScore}</span>
+ ${withKg?'<input class="kg" type="number" placeholder="kg" />':''}
+ </label>`;
 }
 function renderPickers(){
-  const agg = BATCHES.filter(isLot);
-  AT.$('#agg-pick').innerHTML = agg.length?agg.map(b=>rowHtml(b,false)).join(''):emptyMsg('No collected lots yet — add some in the Collector app.');
-  const mrg = BATCHES.filter(isMixable);
-  AT.$('#merge-pick').innerHTML = mrg.length?mrg.map(b=>rowHtml(b,true)).join(''):emptyMsg('No mixable lots yet.');
-  const lab = AT.$('#lab-batch'); lab.innerHTML='';
-  BATCHES.filter(b=>!b.epc.includes('FORMULATION')).forEach(b=>lab.appendChild(AT.el('option',{value:b.epc}, `${AT.shortEpc(b.epc)} · ${b.status}`)));
-  const passed = BATCHES.filter(b=>b.status==='COMPLETE_PASSED' && !b.epc.includes('FORMULATION'));
-  AT.$('#form-pick').innerHTML = passed.length?passed.map(b=>rowHtml(b,false)).join(''):emptyMsg('No COMPLETE_PASSED batches yet — run a lab test first.');
+ const agg = BATCHES.filter(isLot);
+ AT.$('#agg-pick').innerHTML = agg.length?agg.map(b=>rowHtml(b,false)).join(''):emptyMsg('No collected lots yet — add some in the Collector app.');
+ const mrg = BATCHES.filter(isMixable);
+ AT.$('#merge-pick').innerHTML = mrg.length?mrg.map(b=>rowHtml(b,true)).join(''):emptyMsg('No mixable lots yet.');
+ const lab = AT.$('#lab-batch'); lab.innerHTML='';
+ BATCHES.filter(b=>!b.epc.includes('FORMULATION')).forEach(b=>lab.appendChild(AT.el('option',{value:b.epc}, `${AT.shortEpc(b.epc)} · ${b.status}`)));
+ const passed = BATCHES.filter(b=>b.status==='COMPLETE_PASSED' && !b.epc.includes('FORMULATION'));
+ AT.$('#form-pick').innerHTML = passed.length?passed.map(b=>rowHtml(b,false)).join(''):emptyMsg('No COMPLETE_PASSED batches yet — run a lab test first.');
 }
 function emptyMsg(t){ return `<div class="pick dim"><span class="epc muted">${t}</span></div>`; }
 
 // Product QR tab — list finished products, generate a scannable label on demand.
 function renderQrList(){
-  const el = AT.$('#qr-list'); if(!el) return;
-  const products = BATCHES.filter(b=>b.epc.includes('output:FORMULATION-') && b.status==='COMPLETE_PASSED');
-  el.innerHTML = products.length ? products.map(b=>`<div class="pick" data-epc="${AT.esc(b.epc)}">
-      <span class="epc">${AT.esc(b.productName || AT.shortEpc(b.epc))}</span>
-      ${AT.statusBadge(b.status)}
-      <button class="btn-ghost gen" data-epc="${AT.esc(b.epc)}">Generate QR</button>
-    </div>`).join('') : emptyMsg('No finished products yet — formulate one in the Formulate tab (needs all checkpoints passed).');
-  AT.$$('#qr-list .gen').forEach(btn=>btn.addEventListener('click',()=>genProductQr(btn.dataset.epc)));
+ const el = AT.$('#qr-list'); if(!el) return;
+ const products = BATCHES.filter(b=>b.epc.includes('output:FORMULATION-') && b.status==='COMPLETE_PASSED');
+ el.innerHTML = products.length ? products.map(b=>`<div class="pick" data-epc="${AT.esc(b.epc)}">
+ <span class="epc">${AT.esc(b.productName || AT.shortEpc(b.epc))}</span>
+ ${AT.statusBadge(b.status)}
+ <button class="btn-ghost gen" data-epc="${AT.esc(b.epc)}">Generate QR</button>
+ </div>`).join('') : emptyMsg('No finished products yet — formulate one in the Formulate tab (needs all checkpoints passed).');
+ AT.$$('#qr-list .gen').forEach(btn=>btn.addEventListener('click',()=>genProductQr(btn.dataset.epc)));
 }
 async function genProductQr(epc){
-  const out = AT.$('#qr-out');
-  out.innerHTML = `<div class="small muted" style="margin-top:12px"><span class="spinner"></span> Generating label…</div>`;
-  const qrSrc = '/qr/product/'+encodeURIComponent(epc)+'/qr.svg';
-  let name = AT.shortEpc(epc), token = '';
-  try{ const t = await AT.get('/qr/product/'+encodeURIComponent(epc)+'/token'); name = t.productName || name; token = t.token; }catch(_){}
-  const openHref = token ? '/product.html?token='+encodeURIComponent(token) : '#';
-  out.innerHTML = `<div class="banner ok"><b>Consumer QR — ${AT.esc(name)}</b>
-    <div class="qr"><img class="qrimg" src="${qrSrc}" alt="Product QR" width="200" height="200"/>
-    <div style="flex:1;min-width:220px">
-      <div class="small muted" style="margin-bottom:6px">Scan with any phone camera → opens the clean consumer authenticity page for this product.</div>
-      <div id="scan-hint" class="small"></div>
-      <div style="margin-top:10px">
-        <a class="btn-ghost" href="${qrSrc}" download="ayurtrace-${AT.esc(AT.shortEpc(epc))}.svg">Download QR</a>
-        <a class="btn-ghost" href="${openHref}" target="_blank" rel="noopener">Open consumer page</a>
-      </div>
-    </div></div></div>`;
-  showScanHint();
+ const out = AT.$('#qr-out');
+ out.innerHTML = `<div class="small muted" style="margin-top:12px"><span class="spinner"></span> Generating label…</div>`;
+ const qrSrc = '/qr/product/'+encodeURIComponent(epc)+'/qr.svg';
+ let name = AT.shortEpc(epc), token = '';
+ try{ const t = await AT.get('/qr/product/'+encodeURIComponent(epc)+'/token'); name = t.productName || name; token = t.token; }catch(_){}
+ const openHref = token ? '/product.html?token='+encodeURIComponent(token) : '#';
+ out.innerHTML = `<div class="banner ok"><b>Consumer QR — ${AT.esc(name)}</b>
+ <div class="qr"><img class="qrimg" src="${qrSrc}" alt="Product QR" width="200" height="200"/>
+ <div style="flex:1;min-width:220px">
+ <div class="small muted" style="margin-bottom:6px">Scan with any phone camera → opens the clean consumer authenticity page for this product.</div>
+ <div id="scan-hint" class="small"></div>
+ <div style="margin-top:10px">
+ <a class="btn-ghost" href="${qrSrc}" download="ayurtrace-${AT.esc(AT.shortEpc(epc))}.svg">Download QR</a>
+ <a class="btn-ghost" href="${openHref}" target="_blank" rel="noopener">Open consumer page</a>
+ </div>
+ </div></div></div>`;
+ showScanHint();
 }
 function selected(container, withKg){
-  return AT.$$('.pick', AT.$('#'+container)).filter(p=>p.querySelector('input[type=checkbox]')?.checked)
-    .map(p=>({ epc:p.dataset.epc, kg: withKg?Number(p.querySelector('.kg')?.value||0):undefined }));
+ return AT.$$('.pick', AT.$('#'+container)).filter(p=>p.querySelector('input[type=checkbox]')?.checked)
+ .map(p=>({ epc:p.dataset.epc, kg: withKg?Number(p.querySelector('.kg')?.value||0):undefined }));
 }
 function banner(id, ok, html){ AT.$('#'+id).innerHTML = `<div class="banner ${ok?'ok':'err'}">${html}</div>`; }
 function errHtml(e){ return `<div class="code">${AT.esc(e.code)}</div><div>${AT.esc(e.message||'Rejected.')}</div>${e.detail&&Object.keys(e.detail).length?`<div class="hint mono">${AT.esc(JSON.stringify(e.detail))}</div>`:''}`; }
 
 // AGGREGATION
 AT.$('#agg-go').addEventListener('click', async ()=>{
-  const sel = selected('agg-pick', false);
-  if(!sel.length) return banner('agg-res', false, 'Pick at least one lot.');
-  try{
-    const d = await AT.post('/events/aggregation', {
-      parentEpc:'container-pending', childEpcs: sel.map(s=>s.epc),
-      declaredKg:Number(AT.$('#agg-decl').value), measuredKg:Number(AT.$('#agg-meas').value),
-      zoneId: AT.$('#agg-zone').value,
-    });
-    banner('agg-res', true, `<b>Weighbridge passed.</b> Container <span class="mono">${AT.esc(AT.shortEpc(d.containerEpc))}</span> created within ±10% tolerance.`);
-    refresh();
-  }catch(e){ banner('agg-res', false, errHtml(e) + (e.code==='WEIGHT_VARIANCE_HOLD'?'<div class="hint">Batch put on HOLD for CFA inspection — measured weight is outside the ±10% transit-loss tolerance.</div>':'')); }
+ const sel = selected('agg-pick', false);
+ if(!sel.length) return banner('agg-res', false, 'Pick at least one lot.');
+ try{
+ const d = await AT.post('/events/aggregation', {
+ parentEpc:'container-pending', childEpcs: sel.map(s=>s.epc),
+ declaredKg:Number(AT.$('#agg-decl').value), measuredKg:Number(AT.$('#agg-meas').value),
+ zoneId: AT.$('#agg-zone').value,
+ });
+ banner('agg-res', true, `<b>Weighbridge passed.</b> Container <span class="mono">${AT.esc(AT.shortEpc(d.containerEpc))}</span> created within ±10% tolerance.`);
+ refresh();
+ }catch(e){ banner('agg-res', false, errHtml(e) + (e.code==='WEIGHT_VARIANCE_HOLD'?'<div class="hint">Batch put on HOLD for CFA inspection — measured weight is outside the ±10% transit-loss tolerance.</div>':'')); }
 });
 // MERGE
 AT.$('#merge-go').addEventListener('click', async ()=>{
-  const sel = selected('merge-pick', true).filter(s=>s.kg>0);
-  if(!sel.length) return banner('merge-res', false, 'Tick lots and set kg for each.');
-  const body = { kind:'MERGE', inputs: sel.map(s=>({epc:s.epc, quantityKg:s.kg})),
-    outputKg:Number(AT.$('#merge-out').value), declaredLossFactor:Number(AT.$('#merge-loss').value),
-    zoneId: AT.$('#merge-zone').value, dryingGapSeconds:Number(AT.$('#merge-dry').value) };
-  try{
-    const d = await AT.post('/events/transformation', body);
-    banner('merge-res', true, `<b>Mass balance holds.</b> Output <span class="mono">${AT.esc(AT.shortEpc(d.outputEpc))}</span> retains links to ${d.inputEpcs.length} input lot(s) with proportions. Source is apportioned, not lost.`);
-    refresh();
-  }catch(e){ banner('merge-res', false, errHtml(e) + (e.code==='MASS_BALANCE_VIOLATION'?'<div class="hint">Output exceeds the expected post-loss mass — consistent with dilution/filler. Held.</div>':'')); }
+ const sel = selected('merge-pick', true).filter(s=>s.kg>0);
+ if(!sel.length) return banner('merge-res', false, 'Tick lots and set kg for each.');
+ const body = { kind:'MERGE', inputs: sel.map(s=>({epc:s.epc, quantityKg:s.kg})),
+ outputKg:Number(AT.$('#merge-out').value), declaredLossFactor:Number(AT.$('#merge-loss').value),
+ zoneId: AT.$('#merge-zone').value, dryingGapSeconds:Number(AT.$('#merge-dry').value) };
+ try{
+ const d = await AT.post('/events/transformation', body);
+ banner('merge-res', true, `<b>Mass balance holds.</b> Output <span class="mono">${AT.esc(AT.shortEpc(d.outputEpc))}</span> retains links to ${d.inputEpcs.length} input lot(s) with proportions. Source is apportioned, not lost.`);
+ refresh();
+ }catch(e){ banner('merge-res', false, errHtml(e) + (e.code==='MASS_BALANCE_VIOLATION'?'<div class="hint">Output exceeds the expected post-loss mass — consistent with dilution/filler. Held.</div>':'')); }
 });
 // LAB
 AT.$('#lab-go').addEventListener('click', async ()=>{
-  const [vMsp, vRole] = AT.$('#lab-ver').value.split('|');
-  const lead=Number(AT.$('#lab-lead').value), moist=Number(AT.$('#lab-moist').value);
-  const note = AT.$('#ipfs-note');
-  let ipfsCID = 'Qm'+Math.random().toString(36).slice(2,12); // placeholder when no cert uploaded
-  const file = AT.$('#lab-cert').files && AT.$('#lab-cert').files[0];
-  if(file){
-    note.innerHTML = '<span class="spinner"></span> Pinning certificate to IPFS…';
-    try{
-      const b64 = await fileToB64(file);
-      const pin = await AT.post('/ipfs/pin', { contentBase64:b64, filename:file.name, contentType:file.type||'application/octet-stream' });
-      ipfsCID = pin.cid;
-      note.innerHTML = pin.live
-        ? `✓ pinned to IPFS (${AT.esc(pin.provider)}): <a class="mono" href="${AT.esc(pin.url)}" target="_blank" rel="noopener">${AT.esc(pin.cid)}</a>`
-        : `⚠ No IPFS token set — using a deterministic mock CID <span class="mono">${AT.esc(pin.cid)}</span>. Set PINATA_JWT in apps/gateway/.env to make this a real, resolvable link.`;
-    }catch(e){ note.textContent = 'IPFS pin failed: '+(e.message||e.code); }
-  }
-  const body = { epc: AT.$('#lab-batch').value,
-    metrics:[ {name:'lead',value:lead,unit:'ppm',limit:10,withinLimit:lead<=10},
-              {name:'moisture',value:moist,unit:'%',limit:12,withinLimit:moist<=12} ],
-    dna:{ declaredSpecies:AT.$('#lab-dna-d').value, confirmedSpecies:AT.$('#lab-dna-c').value },
-    ipfsCID,
-    testingLabMsp:AT.$('#lab-lab').value, verifierMsp:vMsp, verifierRole:vRole };
-  try{
-    const d = await AT.post('/events/quality-test', body);
-    const pass = d.result==='PASSED';
-    banner('lab-res', pass, `<b>${pass?'Test PASSED':'Test recorded — FAILED'}.</b> Endorsed by ${AT.esc(body.testingLabMsp)} + ${AT.esc(vMsp)} (${AT.esc(vRole)}). ${pass?'Batch is now COMPLETE_PASSED and eligible for formulation.':'CP-5/CP-6 out of limits — batch marked COMPLETE_FAILED.'}`);
-    refresh();
-  }catch(e){ banner('lab-res', false, errHtml(e) + (e.code==='ENDORSEMENT_MISSING'?'<div class="hint">The second signature is missing or not independent. Dual endorsement is the whole point — a lab and the party that benefits cannot both sign.</div>':'')); }
+ const [vMsp, vRole] = AT.$('#lab-ver').value.split('|');
+ const lead=Number(AT.$('#lab-lead').value), moist=Number(AT.$('#lab-moist').value);
+ const note = AT.$('#ipfs-note');
+ let ipfsCID = 'Qm'+Math.random().toString(36).slice(2,12); // placeholder when no cert uploaded
+ const file = AT.$('#lab-cert').files && AT.$('#lab-cert').files[0];
+ if(file){
+ note.innerHTML = '<span class="spinner"></span> Pinning certificate to IPFS…';
+ try{
+ const b64 = await fileToB64(file);
+ const pin = await AT.post('/ipfs/pin', { contentBase64:b64, filename:file.name, contentType:file.type||'application/octet-stream' });
+ ipfsCID = pin.cid;
+ note.innerHTML = pin.live
+ ? `✓ pinned to IPFS (${AT.esc(pin.provider)}): <a class="mono" href="${AT.esc(pin.url)}" target="_blank" rel="noopener">${AT.esc(pin.cid)}</a>`
+ : ` No IPFS token set — using a deterministic mock CID <span class="mono">${AT.esc(pin.cid)}</span>. Set PINATA_JWT in apps/gateway/.env to make this a real, resolvable link.`;
+ }catch(e){ note.textContent = 'IPFS pin failed: '+(e.message||e.code); }
+ }
+ const body = { epc: AT.$('#lab-batch').value,
+ metrics:[ {name:'lead',value:lead,unit:'ppm',limit:10,withinLimit:lead<=10},
+ {name:'moisture',value:moist,unit:'%',limit:12,withinLimit:moist<=12} ],
+ dna:{ declaredSpecies:AT.$('#lab-dna-d').value, confirmedSpecies:AT.$('#lab-dna-c').value },
+ ipfsCID,
+ testingLabMsp:AT.$('#lab-lab').value, verifierMsp:vMsp, verifierRole:vRole };
+ try{
+ const d = await AT.post('/events/quality-test', body);
+ const pass = d.result==='PASSED';
+ banner('lab-res', pass, `<b>${pass?'Test PASSED':'Test recorded — FAILED'}.</b> Endorsed by ${AT.esc(body.testingLabMsp)} + ${AT.esc(vMsp)} (${AT.esc(vRole)}). ${pass?'Batch is now COMPLETE_PASSED and eligible for formulation.':'CP-5/CP-6 out of limits — batch marked COMPLETE_FAILED.'}`);
+ refresh();
+ }catch(e){ banner('lab-res', false, errHtml(e) + (e.code==='ENDORSEMENT_MISSING'?'<div class="hint">The second signature is missing or not independent. Dual endorsement is the whole point — a lab and the party that benefits cannot both sign.</div>':'')); }
 });
 // FORMULATION
 AT.$('#form-go').addEventListener('click', async ()=>{
-  const sel = selected('form-pick', false);
-  if(!sel.length) return banner('form-res', false, 'Pick at least one passed batch.');
-  try{
-    const d = await AT.post('/events/formulation', {
-      inputEpcs: sel.map(s=>s.epc), productName:AT.$('#form-name').value,
-      unitCount:Number(AT.$('#form-units').value), manufacturerMsp:AT.$('#form-mfr').value });
-    const first = d.units[0];
-    const qrSrc = '/qr/'+encodeURIComponent(first.token)+'/qr.svg';
-    let html = `<b>Formulated.</b> Product <span class="mono">${AT.esc(AT.shortEpc(d.productEpc))}</span> · ${d.units.length} unit(s) minted with signed QRs.`;
-    html += `<div class="qr"><img class="qrimg" src="${qrSrc}" alt="Scan to verify this product" width="200" height="200"/><div style="flex:1;min-width:220px">
-      <div class="small muted" style="margin-bottom:6px">Scan this with any phone camera to open the product's provenance. It encodes the manufacturer-signed token, so a copied QR fails verification.</div>
-      <div id="scan-hint" class="small"></div>
-      <div style="margin-top:10px"><a class="btn-ghost" href="/product.html?token=${encodeURIComponent(first.token)}">Open the consumer page →</a>
-      <a class="btn-ghost" href="${qrSrc}" download="ayurtrace-qr.svg">Download QR</a></div>
-    </div></div>`;
-    banner('form-res', true, html);
-    showScanHint();
-    refresh();
-  }catch(e){ banner('form-res', false, errHtml(e) + (e.code==='BATCH_STATUS_HOLD'?'<div class="hint">At least one input is not COMPLETE_PASSED. The CP-7 gate blocks formulation until every input has passed all checkpoints.</div>':'')); }
+ const sel = selected('form-pick', false);
+ if(!sel.length) return banner('form-res', false, 'Pick at least one passed batch.');
+ try{
+ const d = await AT.post('/events/formulation', {
+ inputEpcs: sel.map(s=>s.epc), productName:AT.$('#form-name').value,
+ unitCount:Number(AT.$('#form-units').value), manufacturerMsp:AT.$('#form-mfr').value });
+ const first = d.units[0];
+ const qrSrc = '/qr/'+encodeURIComponent(first.token)+'/qr.svg';
+ let html = `<b>Formulated.</b> Product <span class="mono">${AT.esc(AT.shortEpc(d.productEpc))}</span> · ${d.units.length} unit(s) minted with signed QRs.`;
+ html += `<div class="qr"><img class="qrimg" src="${qrSrc}" alt="Scan to verify this product" width="200" height="200"/><div style="flex:1;min-width:220px">
+ <div class="small muted" style="margin-bottom:6px">Scan this with any phone camera to open the product's provenance. It encodes the manufacturer-signed token, so a copied QR fails verification.</div>
+ <div id="scan-hint" class="small"></div>
+ <div style="margin-top:10px"><a class="btn-ghost" href="/product.html?token=${encodeURIComponent(first.token)}">Open the consumer page →</a>
+ <a class="btn-ghost" href="${qrSrc}" download="ayurtrace-qr.svg">Download QR</a></div>
+ </div></div>`;
+ banner('form-res', true, html);
+ showScanHint();
+ refresh();
+ }catch(e){ banner('form-res', false, errHtml(e) + (e.code==='BATCH_STATUS_HOLD'?'<div class="hint">At least one input is not COMPLETE_PASSED. The CP-7 gate blocks formulation until every input has passed all checkpoints.</div>':'')); }
 });
 
 // tabs
 AT.$$('.tabs button').forEach(btn=>btn.addEventListener('click',()=>{
-  AT.$$('.tabs button').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
-  AT.$$('.pane').forEach(p=>p.classList.remove('on'));
-  AT.$('#pane-'+btn.dataset.tab).classList.add('on');
+ AT.$$('.tabs button').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+ AT.$$('.pane').forEach(p=>p.classList.remove('on'));
+ AT.$('#pane-'+btn.dataset.tab).classList.add('on');
 }));
 refresh();
 </script>
